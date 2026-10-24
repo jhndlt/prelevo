@@ -155,7 +155,7 @@ async function apiLoadMe(){ try { applyServer(await API.me()); } catch(e){ apiFa
 const sandboxNote = () => window.PW && API && !bankEb() ? `<div class="pw-note"><b>Banque de test (sandbox Powens)</b>
   ${window.PW.testCreds.map(c=>`<div><span>${c.bank}</span>${c.fields}</div>`).join('')}
   <p>Pendant la bêta privée, seules les fausses banques de test sont proposées.</p></div>` : '';
-const notBank = (extra='') => `<p class="notbank ${extra}">⟦shield⟧<span><b>${APP_NAME} n’est pas une banque.</b> C’est une télécommande élégante pour celles que vous avez déjà : on s’y branche en lecture seule, via un agrégateur agréé par l’ACPR.</span></p>`;
+const notBank = (extra='') => `<p class="notbank ${extra}">⟦shield⟧<span><b>${APP_NAME} n’est pas une banque.</b> C’est une télécommande élégante pour celles que vous avez déjà : on s’y branche en lecture seule, via un agrégateur bancaire agréé en Europe (DSP2).</span></p>`;
 const pwNote = () => `<div class="pw-note"><b>Identifiants de test Powens</b>
   ${(PWX ? PWX.testCreds : []).map(c=>`<div><span>${c.bank}</span>${c.fields}</div>`).join('')}
   <p>Fausses banques, faux comptes : aucune vraie donnée. Session de test valable 30 min, gardée seulement dans cet onglet.</p></div>`;
@@ -440,16 +440,17 @@ function logoMark(size){
 screens.onboarding = () => `
 <div class="onb">
   ${logoMark('xl')}
-  <h1>Arrêtez de payer pour des abonnements <em>que vous avez oubliés.</em></h1>
+  <h1>Tous vos comptes, <em>enfin d’un seul coup d’œil.</em></h1>
   <p class="lead">${APP_NAME} analyse vos comptes, repère tous vos prélèvements récurrents et vous prévient quand un prix augmente.</p>
   <ul>
-    <li><span>⟦search⟧</span>Tous vos abonnements détectés en 30 secondes</li>
+    <li><span>⟦search⟧</span>Vos soldes, les opérations du jour et ce qui part cette semaine</li>
     <li><span>⟦trend⟧</span>Alerte dès qu’un prix augmente en douce</li>
     <li><span>⟦scissors⟧</span>Résiliation guidée, lettre prête à envoyer</li>
     <li><span class="nic">⟦ban⟧</span>Des conseils neutres : les sponsors n’influencent jamais vos résultats</li>
     <li><span>⟦user⟧</span>Un support humain qui répond vraiment</li>
   </ul>
   ${notBank('onb-nb')}
+  <div class="onb-priv"><b>⟦lock⟧ Vos données restent à vous</b><span>Lecture seule, jamais vos codes bancaires, serveurs en France. Vos données ne sont jamais vendues et vous pouvez tout supprimer à tout moment.</span></div>
   <div class="spacer"></div>
   ${API ? (API.loggedIn() ? `${bankEb() ? `<p class="muted small" style="margin:0 2px 12px;line-height:1.45">Vous autorisez la lecture de vos comptes Société Générale, pour 180 jours. Vous pouvez révoquer cet accès à tout moment. Aucun virement n’est possible.</p>` : ''}
   <button class="btn" id="api-connect">⟦bank⟧ Connecter ma banque</button>
@@ -2795,7 +2796,7 @@ screens.aide = () => `
   <div class="card about">
     <div style="font-weight:700">À propos de ${APP_NAME}</div>
     <p>${APP_NAME} n’est pas une banque : c’est une belle interface qui se branche sur vos banques actuelles, comme une télécommande. Vous gardez vos comptes, vos cartes et votre conseiller.</p>
-    <p>L’accès est en lecture seule, via un agrégateur agréé par l’ACPR (norme européenne DSP2) : ${APP_NAME} voit vos opérations, mais ne peut jamais déplacer votre argent.</p>
+    <p>L’accès est en lecture seule, via Enable Banking, agrégateur bancaire agréé en Europe (directive DSP2) : ${APP_NAME} voit vos opérations, mais ne peut jamais déplacer votre argent.</p>
   </div>
   ${neutral}
   <div class="card">

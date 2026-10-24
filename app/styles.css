@@ -1207,3 +1207,8 @@ html:not([data-theme="dark"]) .tv-card .sp-read b{color:var(--ink)}
 .nt-set{display:flex;align-items:center;justify-content:space-between;min-height:52px;margin:22px 0 calc(8px + env(safe-area-inset-bottom));padding:0 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none}
 .nt-set .acct-lab{display:flex;align-items:center;gap:10px}
 .nt-set .i{width:18px;height:18px}
+
+.onb-priv{margin:12px 0 0;padding:12px 14px;border-radius:16px;background:var(--soft,#F5F6F8);border:1px solid var(--line,#E4E7EC);display:flex;flex-direction:column;gap:4px;text-align:left}
+.onb-priv b{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink,#0A0B0D)}
+.onb-priv b svg{width:16px;height:16px;color:#1652F0}
+.onb-priv span{font-size:13px;line-height:1.45;color:var(--ink2,#5B616E)}

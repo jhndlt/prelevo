@@ -35,12 +35,12 @@
   <link rel="icon" href="assets/favicon-32.png?v=85" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png?v=85">
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="landing.css?v=11">
+  <link rel="stylesheet" href="landing.css?v=12">
 </head>
 <body>
 <header class="nav wrap">
   <a class="brand" href="./" aria-label="Prelevo, accueil"><i class="mark" aria-hidden="true"></i><span>Prelevo</span></a>
-  <nav class="nav-links"><a href="#fonctions">Fonctions</a><a href="#securite">Sécurité</a><a href="#prix">Prix</a><a href="#faq">FAQ</a>
+  <nav class="nav-links"><a href="#fonctions">Fonctions</a><a href="#vie-privee">Vie privée</a><a href="#securite">Sécurité</a><a href="#prix">Prix</a><a href="#faq">FAQ</a>
     <div class="theme" role="radiogroup" aria-label="Apparence">
       <button type="button" role="radio" data-theme-set="light" aria-label="Clair" title="Clair"><svg class="ic-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.15"/><g class="rays"><path d="M12 1.6v3.1M12 19.3v3.1M1.6 12h3.1M19.3 12h3.1M4.55 4.55l2.2 2.2M17.25 17.25l2.2 2.2M19.45 4.55l-2.2 2.2M6.75 17.25l-2.2 2.2"/></g></svg></button>
       <button type="button" role="radio" data-theme-set="dark" aria-label="Sombre" title="Sombre"><svg class="ic-moon" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="prelevo-moon"><circle class="keep" cx="14.15" cy="12" r="5.6"/><circle class="cut" cx="17.35" cy="12" r="4.6"/></mask></defs><circle class="corona" cx="12" cy="12" r="9.15"/><circle cx="14.15" cy="12" r="5.6" mask="url(#prelevo-moon)"/></svg></button>
@@ -56,6 +56,7 @@
     <h1>Gardez votre banque.<br><span class="blue">Changez d’interface.</span></h1>
     <p class="lead">Prelevo lit vos comptes, repère les prélèvements, et vous dit ce que vous pouvez arrêter. Dans l’exemple, 37,15 € trouvés par mois, pour 2,50 €.</p>
     <p class="not-bank"><strong>Prelevo n’est pas une banque.</strong> C’est une télécommande élégante pour les banques que vous avez déjà : vous gardez vos comptes, Prelevo s’y branchera en lecture seule.</p>
+    <p class="priv-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Lecture seule · Serveurs en France · Vos données ne sont jamais vendues</p>
     <form class="wl" data-source="hero" novalidate>
       <div class="wl-row">
         <label class="sr" for="email-hero">Votre e-mail</label>
@@ -63,7 +64,7 @@
         <button type="submit">Rejoindre la liste d’attente</button>
       </div>
       <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <p class="reassure"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Pas de spam. Désinscription en 1 clic. Votre e-mail n’est jamais revendu.</p>
+      <p class="reassure"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Uniquement des nouvelles du lancement. Désinscription en 1 clic. Votre e-mail n’est jamais revendu.</p>
       <label class="consent"><input type="checkbox" name="consent" required><span>J’accepte de recevoir des e-mails de Prelevo sur son lancement. <a href="#confidentialite">Confidentialité</a></span></label>
       <p class="incentive" data-incentive>🎁 Les 500 premiers inscrits : 3 mois de Premium offerts</p>
       <p class="wl-msg" role="status" aria-live="polite"></p>
@@ -80,6 +81,22 @@
   <div><b>Zéro pub en Premium</b><span>conseils toujours neutres</span></div>
   <div><b>3,99 €/mois</b><span>ou gratuit pour commencer</span></div>
   </section>
+
+<section id="vie-privee" class="privacy wrap" aria-labelledby="vp-t">
+  <div class="priv-card">
+    <p class="priv-kick">Vie privée</p>
+    <h2 id="vp-t" class="h2">Vos données restent à vous.</h2>
+    <p class="sub">Prelevo regarde vos comptes, il n’y touche pas. Et vos données ne servent qu’à vous.</p>
+    <ul class="priv-list">
+      <li><b>Lecture seule</b><span>Prelevo peut afficher vos soldes et vos opérations. Aucun virement, aucun paiement n’est possible.</span></li>
+      <li><b>Jamais vos codes bancaires</b><span>Vous vous identifiez directement chez votre banque, via un agrégateur bancaire agréé. Prelevo ne voit et ne stocke jamais votre identifiant ni votre mot de passe.</span></li>
+      <li><b>Hébergé en France</b><span>Le serveur de l’app tourne chez Clever Cloud et la base de données chez Supabase, tous deux à Paris.</span></li>
+      <li><b>Base verrouillée</b><span>Aucun accès public à la base : chaque table est fermée par défaut et seul notre serveur peut la lire. Les jetons d’accès bancaire y sont chiffrés.</span></li>
+      <li><b>Jamais revendues</b><span>Nous ne vendons pas vos données. Les pubs de la version gratuite viennent de sponsors et ne sont jamais choisies d’après vos opérations. Premium : zéro pub.</span></li>
+      <li><b>Supprimez tout, quand vous voulez</b><span>Dans l’app, « Supprimer mon compte » coupe l’accès à votre banque et efface toutes vos données.</span></li>
+    </ul>
+  </div>
+</section>
 
 <section id="fonctions" class="features wrap">
   <h2 class="h2">Ce que Prelevo fait pour vous</h2>
@@ -116,9 +133,9 @@
   <p class="sub">On préfère être clairs dès maintenant sur ce que Prelevo fera… et ne fera jamais.</p>
   <div class="trust-grid">
     <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><h3>Lecture seule</h3><p>Prelevo pourra lire vos opérations pour repérer vos abonnements. Aucun virement, aucun paiement : c’est techniquement impossible.</p></div>
-    <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><h3>Agrégateur agréé par l’ACPR</h3><p>Pour se connecter à votre banque, nous utiliserons un agrégateur agréé par l’ACPR (Banque de France), selon la norme européenne DSP2. Nos tests actuels se font sur l’environnement de test de Powens, établissement de paiement agréé ; aucun contrat n’est encore signé.</p></div>
+    <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><h3>Agrégateur agréé en Europe</h3><p>La connexion à votre banque passe par Enable Banking, prestataire de services d’information sur les comptes agréé en Finlande et autorisé à opérer dans l’Union européenne, selon la directive européenne DSP2.</p></div>
     <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><h3>Aucun identifiant bancaire chez nous</h3><p>Vous vous connectez sur la page sécurisée de l’agrégateur ou de votre banque. Prelevo ne voit et ne stocke jamais votre identifiant ni votre mot de passe.</p></div>
-    <div><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><h3>RGPD, données en Europe</h3><p>Objectif pour l’app : données hébergées dans l’Union européenne, sous le RGPD. Seul le formulaire de cette page passe aujourd’hui par un service hors UE (détails dans la <a href="#confidentialite">confidentialité</a>).</p></div>
+    <div><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><h3>RGPD, données en France</h3><p>Les données de l’app sont hébergées en France, à Paris, sous le RGPD. Seul le formulaire de cette page passe aujourd’hui par un service hors UE (détails dans la <a href="#confidentialite">confidentialité</a>).</p></div>
     <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><h3>Suppression en un clic</h3><p>Un lien de désinscription dans chaque e-mail. Dans l’app, vous pourrez couper l’accès à votre banque et supprimer votre compte et vos données à tout moment.</p></div>
     <div><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><h3>Pas de revente de données</h3><p>Vos données ne sont jamais vendues. Les pubs de la version gratuite sont non ciblées, toujours signalées « Sponsorisé », et n’influencent jamais nos conseils. Premium : zéro pub.</p></div>
   </div>
@@ -135,8 +152,8 @@
 
 <section id="faq" class="faq wrap">
   <h2 class="h2">Questions fréquentes</h2>
-  <details open><summary>Prelevo est-il une banque ?</summary><p>Non. Prelevo n’est pas une banque et vous n’avez aucun compte à ouvrir : vous gardez vos banques actuelles (Crédit Agricole, Société Générale, Caisse d’Épargne…), votre carte et votre conseiller. Prelevo est une interface qui s’y branchera en lecture seule, via un agrégateur agréé par l’ACPR, pour tout voir au même endroit : soldes, opérations, abonnements. Il ne pourra jamais déplacer votre argent.</p></details>
-  <details><summary>Est-ce que c’est sûr ?</summary><p>Oui, c’est notre priorité. La connexion bancaire passera par un agrégateur agréé par l’ACPR (norme européenne DSP2), en lecture seule : Prelevo ne pourra jamais déplacer votre argent, et ne verra jamais vos identifiants bancaires. Vous pourrez couper l’accès quand vous voulez.</p></details>
+  <details open><summary>Prelevo est-il une banque ?</summary><p>Non. Prelevo n’est pas une banque et vous n’avez aucun compte à ouvrir : vous gardez vos banques actuelles (Crédit Agricole, Société Générale, Caisse d’Épargne…), votre carte et votre conseiller. Prelevo est une interface qui s’y branche en lecture seule, via un agrégateur bancaire agréé en Europe (DSP2), pour tout voir au même endroit : soldes, opérations, abonnements. Il ne pourra jamais déplacer votre argent.</p></details>
+  <details><summary>Est-ce que c’est sûr ?</summary><p>Oui, c’est notre priorité. La connexion bancaire passe par Enable Banking, agrégateur agréé en Europe (directive DSP2), en lecture seule : Prelevo ne pourra jamais déplacer votre argent, et ne verra jamais vos identifiants bancaires. Vous pourrez couper l’accès quand vous voulez.</p></details>
   <details><summary>C’est gratuit ?</summary><p>Oui, la version gratuite permet de scanner vos comptes et de voir tous vos abonnements avec le total, avec quelques pubs non ciblées (signalées « Sponsorisé »). Premium, à 3,99 €/mois ou 29,99 €/an, supprime les pubs et ajoute les alertes de hausse de prix, les petits prélèvements oubliés, la résiliation guidée et le reste à vivre. 1 mois de Premium offert pour essayer, et 3 mois offerts pour les 500 premiers inscrits.</p></details>
   <details><summary>Quand sort l’application ?</summary><p>La <a href="app/?demo=1">démo</a> est déjà ouverte, avec des données d’exemple. La bêta privée, celle qui se branche sur une vraie banque, arrive ensuite : les inscrits sont prévenus en premier, sur iPhone et Android.</p></details>
   <details><summary>Que se passe-t-il avec mon e-mail ?</summary><p>Il sert uniquement à vous prévenir du lancement et de votre offre d’inscrit. Pas de newsletter quotidienne, pas de revente, pas de partage avec des annonceurs. Vous pouvez vous désinscrire en 1 clic ou demander la suppression de votre adresse à tout moment.</p></details>
@@ -154,7 +171,7 @@
       <button type="submit">Rejoindre la liste d’attente</button>
     </div>
     <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <p class="reassure"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Pas de spam. Désinscription en 1 clic. Votre e-mail n’est jamais revendu.</p>
+    <p class="reassure"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Uniquement des nouvelles du lancement. Désinscription en 1 clic. Votre e-mail n’est jamais revendu.</p>
     <label class="consent"><input type="checkbox" name="consent" required><span>J’accepte de recevoir des e-mails de Prelevo sur son lancement. <a href="#confidentialite">Confidentialité</a></span></label>
     <p class="incentive" data-incentive>🎁 Les 500 premiers inscrits : 3 mois de Premium offerts</p>
     <p class="wl-msg" role="status" aria-live="polite"></p>
