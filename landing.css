@@ -177,3 +177,18 @@ h1{font-size:clamp(42px,6vw,68px);line-height:1.02;letter-spacing:-.05em;font-we
 .legal-back{min-height:44px;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink2);font-size:14.5px;font-weight:600}
 .legal-back:hover{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}html{scroll-behavior:auto}}
+
+/* Vie privée */
+.priv-badge{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:7px 13px 7px 10px}
+.priv-badge svg{width:16px;height:16px;flex:none;fill:none;stroke:var(--accent-d);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.privacy{padding-top:28px;padding-bottom:12px}
+.priv-card{background:#0A0B0D;color:#F3F4F6;border-radius:28px;padding:44px 40px}
+:root[data-theme="dark"] .priv-card{background:var(--soft);border:1px solid var(--line)}
+.priv-kick{display:inline-block;font-size:13px;font-weight:600;color:#fff;background:var(--accent);border-radius:99px;padding:5px 12px;margin-bottom:14px}
+.priv-card .h2{color:#fff}
+.priv-card .sub{color:#C8CDD6}
+.priv-list{list-style:none;padding:0;margin:28px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:22px 28px}
+.priv-list li{display:flex;flex-direction:column;gap:5px;padding-left:16px;border-left:2px solid var(--accent)}
+.priv-list b{font-size:16px;color:#fff}
+.priv-list span{font-size:14px;line-height:1.5;color:#C8CDD6}
+@media (max-width:860px){.priv-list{grid-template-columns:1fr}.priv-card{padding:30px 22px;border-radius:24px}}
