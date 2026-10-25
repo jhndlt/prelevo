@@ -3271,7 +3271,7 @@ function resetScroll() {
   document.body.scrollTop = 0;
 }
 function syncNav(name) {
-  const tabbed = ['dashboard','graphiques','operations','abonnements','notifications','notif-reglages','premium','abo','banques','banque','budget','export','defis'].includes(name) || (!screens[name]);
+  const tabbed = ['dashboard','graphiques','operations','abonnements','notifications','notif-reglages','premium','abo','banques','banque','budget','export','defis','niveaux'].includes(name) || (!screens[name]);
   const bar = $('#tabbar');
   const tabName = name==='abo' || name==='operations' || name==='export' ? 'abonnements' : name==='budget' || name==='notif-reglages' ? 'notifications' : !screens[name] ? 'dashboard' : name;
   if (tabbed) { bar.hidden = false; bar.removeAttribute('aria-hidden'); }
@@ -3385,13 +3385,13 @@ function gamCard(){
     const L = ledger(), g = gamSettle(L.tx), c = gamCtx(g), now = nowRef();
     const got = BADGES.filter(b => b.ok(c)).length;
     const id = Object.keys(g.on)[0], df = id && DEFIS.find(x => x.id === id);
-    const r = df && defiState(df, L.tx, now);
+    const r = df && defiState(df, L.tx, now), T = coinTally();
     return `<a class="gam-card rise" style="--d:1" href="#/defis">
       <span class="gam-ic">⟦trophy⟧</span>
       <span class="gam-mid"><b>${df ? esc(df.t) : 'Défis et badges'}</b>
         <span>${df ? (r.ok ? 'En bonne voie' : 'Plafond dépassé') + ' · ' + r.txt : got + ' badge' + (got > 1 ? 's' : '') + ' sur ' + BADGES.length + ' · lancez un défi d’économies'}</span>
         ${df ? defiBar(r) : ''}</span>
-      <span class="gam-streak" aria-label="Série de ${c.streak} jours">${c.streak}<i>j</i></span></a>`;
+      <span class="gam-lv" aria-label="Niveau ${T.lv.t}, ${fmtCoins(T.total)} Prelevo Coins">${coinSvg(T.lv, 22)}<b>${fmtCoins(T.total)}</b><i>${T.lv.t}</i></span></a>`;
   } catch (e) { return ''; }
 }
 screens.defis = () => {
@@ -3408,6 +3408,7 @@ screens.defis = () => {
     <div><b>${c.done}</b><span>défi${c.done > 1 ? 's' : ''} réussi${c.done > 1 ? 's' : ''}</span></div>
     <div><b>${got}/${BADGES.length}</b><span>badges</span></div>
   </div>
+  <a class="nv-entry" href="#/niveaux">${(T => coinSvg(T.lv, 34) + `<span><b>Niveau ${T.lv.t}</b><span>${fmtCoins(T.total)} Prelevo Coins${T.next ? ' · ' + T.next.t + ' à ' + fmtCoins(T.next.min) : ''}</span></span>`)(coinTally())}<span class="acct-go">⟦chev⟧</span></a>
   <p class="gam-note">Les défis observent vos dépenses synchronisées. Prelevo ne déplace jamais d’argent.</p>
   ${active.length ? `<p class="acct-k">En cours</p>` + active.map(df => { const r = defiState(df, L.tx, now); return `
     <div class="gam-defi on"><div class="gd-top"><span class="gd-ic">⟦${df.ic}⟧</span><div class="gd-mid"><b>${esc(df.t)}</b><span>${esc(df.d)}</span></div></div>
@@ -3431,6 +3432,136 @@ document.addEventListener('click', e => {
   render();
 });
 
+// ---------- Niveaux et Prelevo Coins (local, bêta) : points de fidélité, sans valeur monétaire ----------
+const NIVEAUX = [
+  { id:'bronze',  t:'Bronze',  min:0,     boost:'x1',   vote:1,  g:['#E3A877','#A0612F','#6B3A17'], ink:'#FFF3E6', mk:'#8A4E22' },
+  { id:'argent',  t:'Argent',  min:500,   boost:'x1,25', vote:2,  g:['#F4F6F8','#AEB5BD','#6E7680'], ink:'#FFFFFF', mk:'#8E969F' },
+  { id:'or',      t:'Or',      min:1500,  boost:'x1,5', vote:3,  g:['#FFE58A','#E0A82E','#9A6A0B'], ink:'#FFF8DC', mk:'#B98314' },
+  { id:'platine', t:'Platine', min:4000,  boost:'x2',   vote:5,  g:['#F3F0FF','#C9C3E6','#8E86B5'], ink:'#FFFFFF', mk:'#A39CC9' },
+  { id:'diamant', t:'Diamant', min:8000,  boost:'x2,5', vote:8,  g:['#E6F7FF','#8FD3F4','#3A8FC4'], ink:'#FFFFFF', mk:'#4FA6D8' },
+  { id:'elite',   t:'Élite',   min:15000, boost:'x3',   vote:12, g:['#3D8BFF','#0B1E46','#000000'], ink:'#FFFFFF', mk:'#0066FF', glow:true },
+];
+const COIN_GAINS = [
+  { k:'jour',   ic:'calendar', t:'Ouvrir Prelevo', d:'Une fois par jour', v:10 },
+  { k:'defi',   ic:'check',    t:'Défi réussi', d:'Pour chaque défi d’économies gagné', v:100 },
+  { k:'badge',  ic:'star',     t:'Badge obtenu', d:'Pour chaque badge débloqué', v:50 },
+  { k:'parrain',ic:'userplus', t:'Filleul inscrit', d:'Pour chaque ami(e) qui crée son compte', v:200 },
+];
+// Pièce : dégradé métallique du niveau + radar Prelevo gravé (ombre portée foncée + reflet clair)
+const RADAR = m => `<path d="M-286 0H-205V345L-286 426Z"/><circle r="245.5" fill="none" stroke-width="81"/><path d="M128 0A128 128 0 1 1 -128 0A128 128 0 1 1 128 0ZM70 0A70 70 0 1 1 -70 0A70 70 0 1 1 70 0Z" fill-rule="evenodd" mask="url(#${m})"/><circle r="30"/><circle cx="109" cy="-90" r="26"/>`;
+const RADAR_CUT = 'M10 -69.3C26 -71 40 -72 52 -76C66 -81 78 -93 90 -108L150 -150L150 -60L112 -61C96 -50 80 -36 74 -24C71 -16 70 -8 70 0A70 70 0 0 0 10 -69.3Z';
+function hdrFx(){
+  const L = (a) => { let o=''; for (let y=-600; y<=600; y+=34) o += `<line x1="-900" y1="${y}" x2="900" y2="${y}"/>`; return `<g class="fx-grid" transform="translate(195 90) rotate(${a})">${o}</g>`; };
+  const S = [[-30,-34,0],[30,34,1.3],[-30,68,2.6],[30,-68,3.7],[-30,0,1.9]];
+  const st = S.map(([a,y,d],i)=>`<g transform="translate(195 90) rotate(${a})"><rect class="fx-st" x="-60" y="${y-0.75}" width="60" height="1.5" rx=".75" fill="url(#fx-g)" style="animation-delay:${d}s;--fx-from:${i%2?-260:-200}px;--fx-to:${i%2?160:240}px"/></g>`).join('');
+  return `<div class="hdr-fx" aria-hidden="true"><svg width="100%" height="100%" viewBox="0 0 390 200" preserveAspectRatio="xMidYMin slice"><defs><linearGradient id="fx-g"><stop offset="0" stop-color="#0066FF" stop-opacity="0"/><stop offset=".8" stop-color="#3D8BFF"/><stop offset="1" stop-color="#BFD7FF"/></linearGradient></defs>${L(-30)}${L(30)}${st}</svg></div>`;
+}
+function coinSvg(lv, size = 20){
+  const n = 'cg-' + lv.id + '-' + size, m = n + '-m', small = size < 28;
+  const k = small ? 0.041 : 0.0335, tr = d => `translate(${20 + d} ${20 + d}) scale(${k}) translate(0 -68)`;
+  const sw = small ? 0 : 0.6;
+  return `<svg class="coin${lv.glow ? ' glow' : ''}${small ? '' : ' shim'}" width="${size}" height="${size}" viewBox="0 0 40 40" aria-hidden="true"><defs>
+    <linearGradient id="${n}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lv.g[0]}"/><stop offset=".55" stop-color="${lv.g[1]}"/><stop offset="1" stop-color="${lv.g[2]}"/></linearGradient>
+    <linearGradient id="${n}-r" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${lv.g[0]}"/><stop offset="1" stop-color="${lv.g[2]}"/></linearGradient>
+    <mask id="${m}"><rect x="-300" y="-300" width="600" height="600" fill="#fff"/><path d="${RADAR_CUT}" fill="#000"/></mask></defs>
+    <circle cx="20" cy="20" r="19.5" fill="url(#${n}-r)"/><circle cx="20" cy="20" r="17.3" fill="url(#${n})"/>
+    ${small ? '' : `<circle cx="20" cy="20" r="17.3" fill="none" stroke="${lv.g[2]}" stroke-opacity=".35" stroke-width=".5"/>`}
+    <g transform="${tr(small ? 0.45 : 0.55)}" fill="${lv.g[2]}" stroke="${lv.g[2]}" fill-opacity=".7" stroke-opacity=".7">${RADAR(m)}</g>
+    <g transform="${tr(small ? -0.25 : -0.35)}" fill="${lv.ink}" stroke="${lv.ink}" fill-opacity="${small ? .55 : .5}" stroke-opacity="${small ? .55 : .5}">${RADAR(m)}</g>
+    <g transform="${tr(0)}" fill="${small && !lv.glow ? lv.g[2] : lv.mk}" stroke="${small && !lv.glow ? lv.g[2] : lv.mk}">${RADAR(m)}</g>
+    ${lv.glow ? '<circle class="coin-br" cx="20" cy="20" r="18.6" fill="none" stroke="#5C9DFF" stroke-width="1.4"/>' : ''}
+    ${small ? '' : `<clipPath id="${n}-c"><circle cx="20" cy="20" r="19.5"/></clipPath><g clip-path="url(#${n}-c)"><rect class="coin-sh" x="-14" y="-10" width="9" height="60" fill="#fff" transform="rotate(20 20 20)"/></g>`}</svg>`;
+}
+const fmtCoins = n => Math.round(n).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ');
+function coinTally(){
+  const g = gamRead(), c = gamCtx(g);
+  const badges = BADGES.filter(b => b.ok(c)).length;
+  const filleuls = myRefs().filter(r => r.status === 'inscrit' || r.status === 'offert').length;
+  const parts = { jour: new Set(g.days).size, defi: g.done.length, badge: badges, parrain: filleuls };
+  const total = COIN_GAINS.reduce((a, x) => a + parts[x.k] * x.v, 0);
+  let i = 0; NIVEAUX.forEach((l, j) => { if (total >= l.min) i = j; });
+  return { total, parts, i, lv: NIVEAUX[i], next: NIVEAUX[i + 1] };
+}
+// Sondages de la communauté (bêta, stockés sur cet appareil)
+const VOTE_KEY = 'prelevo-votes';
+const SONDAGES = [
+  { id:'next1', q:'Quelle fonctionnalité voulez-vous en premier ?', o:['Objectifs d’épargne', 'Partage de comptes en couple', 'Export pour la déclaration d’impôts'] },
+  { id:'next2', q:'Un mode sombre automatique selon l’heure ?', o:['Oui, volontiers', 'Non, je préfère choisir'] },
+];
+function votesRead(){ const v = Store.readJSON(VOTE_KEY, {}); return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; }
+function niveauRows(lv, j){
+  const row = (ic, lab, val, off) => `<div class="nv-row${off ? ' off' : ''}"><span class="nv-ri">⟦${ic}⟧</span><span>${lab}</span><b>${val}</b></div>`;
+  return row('userplus', 'Boost de parrainage', lv.boost)
+    + row('spark', 'Pouvoir de vote', lv.vote + ' voix')
+    + row('trophy', 'Défis et badges', 'Inclus')
+    + row('star', '1 an de Premium offert', j === 5 ? 'Bientôt' : 'Élite', j !== 5);
+}
+screens.niveaux = (q) => {
+  const T = coinTally(), sel = Math.max(0, Math.min(5, parseInt(q.get('n') ?? T.i, 10) || 0));
+  const votes = votesRead();
+  const cards = NIVEAUX.map((lv, j) => {
+    const missing = Math.max(0, lv.min - T.total), reached = T.total >= lv.min;
+    return `<article class="nv-card" data-i="${j}" aria-label="Niveau ${lv.t}">
+      <div class="nv-medal">${coinSvg(lv, 76)}</div>
+      <h2>${lv.t}</h2>
+      <p class="nv-need">${lv.min ? `Cumulez <b>${fmtCoins(lv.min)} Coins</b> pour accéder à` : 'Votre point de départ, avec'}</p>
+      <div class="nv-perk">Boost de parrainage ${lv.boost}</div>
+      <div class="nv-perk">${lv.vote} voix par vote</div>
+      ${j === 5 ? '<div class="nv-perk elite">1 an de Premium offert · bientôt</div>' : ''}
+      <div class="nv-rows">${niveauRows(lv, j)}</div>
+      <div class="nv-cta ${reached ? 'ok' : ''}">${reached ? (j === T.i ? 'Votre niveau actuel' : 'Niveau atteint') : 'Encore ' + fmtCoins(missing) + ' Prelevo Coins'}</div>
+    </article>`; }).join('');
+  const prog = T.next ? Math.round((T.total - T.lv.min) * 100 / (T.next.min - T.lv.min)) : 100;
+  return `
+<div class="screen niveaux">
+  <div class="topbar"><a class="back" href="#/defis" aria-label="Retour">⟦back⟧</a><h1>Niveaux</h1>${demoTag}</div>
+  <div class="nv-bal">${coinSvg(T.lv, 40)}<div><b>${fmtCoins(T.total)}</b><span>Prelevo Coins · niveau ${T.lv.t}</span></div></div>
+  <div class="budget-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${prog}"><i style="width:${prog}%"></i></div>
+  <p class="gam-note">${T.next ? 'Encore ' + fmtCoins(T.next.min - T.total) + ' Prelevo Coins pour le niveau ' + T.next.t + '.' : 'Vous avez atteint le niveau le plus haut.'}</p>
+  <div class="nv-track" id="nv-track" data-start="${sel}">${cards}</div>
+  <div class="nv-nav"><button type="button" class="nv-arrow" data-nv="-1" aria-label="Niveau précédent">⟦back⟧</button>
+    <div class="nv-dots">${NIVEAUX.map((l, j) => `<i class="${j === sel ? 'on' : ''}"></i>`).join('')}</div>
+    <button type="button" class="nv-arrow next" data-nv="1" aria-label="Niveau suivant">⟦back⟧</button></div>
+
+  <p class="acct-k" id="gagner">Comment gagner des Prelevo Coins</p>
+  <div class="menu-card nv-gains">${COIN_GAINS.map(x => `<div class="nv-gain"><span class="gd-ic">⟦${x.ic}⟧</span><div class="gd-mid"><b>${x.t}</b><span>${x.d}${x.k === 'parrain' ? ' · suivi serveur bientôt' : ''} · ${T.parts[x.k]} fois</span></div><span class="nv-plus">+${x.v} ${coinSvg(T.lv, 20)}</span></div>`).join('')}</div>
+
+  <p class="acct-k" id="votes">Votes <i class="bud-opt">bêta</i></p>
+  <p class="gam-note">Votre voix compte ${T.lv.vote} fois au niveau ${T.lv.t}. Votes enregistrés sur cet appareil pour l’instant ; résultats à venir avec le décompte serveur.</p>
+  ${SONDAGES.map(s => { const mine = votes[s.id];
+    return `<div class="gam-defi nv-poll"><b>${esc(s.q)}</b>${s.o.map((o, k) => { return `<button type="button" class="nv-opt ${mine && mine.o === k ? 'on' : ''}" data-vote="${s.id}:${k}" ${mine ? 'disabled' : ''}><span class="nv-ol">${esc(o)}</span>${mine && mine.o === k ? '<i>Votre choix</i>' : ''}</button>`; }).join('')}
+      <span class="nv-pv">${mine ? 'Merci, vote compté avec ' + mine.w + ' voix · Résultats à venir' : 'Touchez une réponse pour voter'}</span></div>`; }).join('')}
+
+  <p class="nv-foot">Les Prelevo Coins sont des points de fidélité. Ils ne s’achètent pas, ne se transfèrent pas et ne peuvent pas être convertis en argent. Prelevo ne fait aucun paiement sur vos comptes. Le Premium offert au niveau Élite et le suivi des parrainages côté serveur arrivent bientôt.</p>
+</div>`;
+};
+function nvGo(d){
+  const t = document.getElementById('nv-track'); if (!t) return;
+  const w = t.clientWidth, i = Math.max(0, Math.min(5, Math.round(t.scrollLeft / w) + d));
+  t.scrollTo({ left: i * w, behavior: d ? 'smooth' : 'auto' });
+}
+function nvDots(){
+  const t = document.getElementById('nv-track'); if (!t) return;
+  const i = Math.round(t.scrollLeft / t.clientWidth);
+  document.querySelectorAll('.nv-dots i').forEach((el, j) => el.classList.toggle('on', j === i));
+}
+function nvMount(){
+  const t = document.getElementById('nv-track'); if (!t) return;
+  t.scrollLeft = (+t.dataset.start || 0) * t.clientWidth;
+  t.addEventListener('scroll', nvDots, { passive:true });
+  if (location.hash.includes('#gagner') || /[?&]s=(gagner|votes)/.test(location.hash)) { const id = /s=votes/.test(location.hash) ? 'votes' : 'gagner'; const el = document.getElementById(id); if (el) el.scrollIntoView({ block:'start' }); }
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('[data-nv]');
+  if (a) { nvGo(+a.dataset.nv); return; }
+  const v = e.target.closest && e.target.closest('[data-vote]');
+  if (!v) return;
+  const [id, k] = v.dataset.vote.split(':'), votes = votesRead();
+  if (votes[id]) return;
+  votes[id] = { o: +k, w: coinTally().lv.vote }; Store.writeJSON(VOTE_KEY, votes);
+  toast('Vote enregistré'); render();
+});
+
 function render(){
   closeCatSheet();
   leaveView();
@@ -3443,6 +3574,7 @@ function render(){
   flushMounts();
   const sub = $('#app .sub-bar'); if (sub) document.body.appendChild(sub);
   if (API && ['onboarding','connexion','dashboard','connect','banques'].includes(name)){ const sc = $('#app').firstElementChild; if (sc && !sc.querySelector('.alpha-note')) sc.insertAdjacentHTML('afterbegin', bankEb() ? '<div class="alpha-note" role="note"><b>Bêta fermée</b> — lecture seule : Prelevo ne fait aucun paiement sur vos comptes</div>' : '<div class="alpha-note" role="note"><b>Bêta privée</b> — banques de test uniquement pour l’instant</div>'); }
+  if (['dashboard','defis','niveaux'].includes(name)){ const sc = $('#app .screen'); if (sc){ sc.classList.add('fx'); sc.insertAdjacentHTML('afterbegin', hdrFx()); } }
   syncNav(name);
   resetScroll();
   if (name === 'graphiques') {
@@ -3454,6 +3586,7 @@ function render(){
   if (name !== 'verrouillage') { lockPhase = ''; setupBuf = ''; setupA = ''; }
   if (name === 'soutiens') loadSupporters();
   if (name==='dashboard' || name==='defis') gamMarkOpen();
+  if (name==='niveaux') nvMount();
   if (name==='dashboard') animateHome();
   if (name==='scan') runScan();
   if (name==='pwscan' && PWX && !LIVE) runPwScan();
