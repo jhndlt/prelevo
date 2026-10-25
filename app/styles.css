@@ -1316,3 +1316,21 @@ html:not([data-theme="dark"]) .tv-card .sp-read b{color:var(--ink)}
 .coin-br{opacity:.15;animation:coin-br 4s ease-in-out infinite}
 @keyframes coin-br{0%,100%{opacity:.15}50%{opacity:.7}}
 @media (prefers-reduced-motion: reduce){ .fx-st,.coin-sh{animation:none;opacity:0} .coin-br{animation:none} }
+
+/* v104 — info droit de vote */
+.nv-vk{display:flex;align-items:center;gap:6px}
+.nv-info{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;margin:-8px 0 -8px auto;border-radius:50%;color:var(--ink2)}
+.nv-info .i{width:19px;height:19px}
+.nv-info:hover,.nv-info:focus-visible{color:#0066FF}
+.vi-panel{height:min(92vh,760px);max-height:none;padding:10px 22px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.vi-h{display:flex;align-items:center;justify-content:space-between;padding:8px 0 6px}
+.vi-h h2{font-size:22px;font-weight:700;letter-spacing:-.03em}
+.vi-x{width:40px;height:40px;border-radius:50%;background:var(--soft);display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
+.vi-x .i{width:18px;height:18px}
+.vi-list{list-style:none;margin:8px 0 0;padding:0}
+.vi-row{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-bottom:.5px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+.vi-ic{flex:none;width:28px;color:#0066FF;padding-top:1px}.vi-ic .i{width:24px;height:24px}
+.vi-tx{flex:1;display:flex;flex-direction:column;gap:4px}.vi-tx b{font-size:16px;font-weight:650}.vi-tx span{color:var(--ink2);font-size:14px;line-height:1.45}
+.vi-row em{font-style:normal;font-size:13px;color:var(--ink2);padding-top:2px;white-space:nowrap}
+.vi-row.off .vi-ic,.vi-row.off .vi-tx{opacity:.45}.vi-row.off .vi-ic{color:var(--ink2)}
+.vi-foot{margin-top:auto;padding-top:16px;color:var(--ink2);font-size:12.5px;line-height:1.5}
