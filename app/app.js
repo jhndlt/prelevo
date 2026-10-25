@@ -182,6 +182,7 @@ const ICONS = {
   link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1L20 20M8.1 15.9L20 4"/>',
   gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8c-2 0-4.5-1-4.5-2.5S9.5 3 12 8zm0 0c2 0 4.5-1 4.5-2.5S14.5 3 12 8z"/>',
+  vote:'<rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V5h8v6"/><path d="M10 8l1.5 1.5L14 7"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8v.01"/>',
   mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
   copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
@@ -3526,7 +3527,7 @@ screens.niveaux = (q) => {
   <p class="acct-k" id="gagner">Comment gagner des Prelevo Coins</p>
   <div class="menu-card nv-gains">${COIN_GAINS.map(x => `<div class="nv-gain"><span class="gd-ic">⟦${x.ic}⟧</span><div class="gd-mid"><b>${x.t}</b><span>${x.d}${x.k === 'parrain' ? ' · suivi serveur bientôt' : ''} · ${T.parts[x.k]} fois</span></div><span class="nv-plus">+${x.v} ${coinSvg(T.lv, 20)}</span></div>`).join('')}</div>
 
-  <p class="acct-k" id="votes">Votes <i class="bud-opt">bêta</i></p>
+  <p class="acct-k nv-vk" id="votes">Votes <i class="bud-opt">bêta</i><button type="button" class="nv-info" data-vinfo aria-label="En savoir plus sur le droit de vote" aria-haspopup="dialog">⟦info⟧</button></p>
   <p class="gam-note">Votre voix compte ${T.lv.vote} fois au niveau ${T.lv.t}. Votes enregistrés sur cet appareil pour l’instant ; résultats à venir avec le décompte serveur.</p>
   ${SONDAGES.map(s => { const mine = votes[s.id];
     return `<div class="gam-defi nv-poll"><b>${esc(s.q)}</b>${s.o.map((o, k) => { return `<button type="button" class="nv-opt ${mine && mine.o === k ? 'on' : ''}" data-vote="${s.id}:${k}" ${mine ? 'disabled' : ''}><span class="nv-ol">${esc(o)}</span>${mine && mine.o === k ? '<i>Votre choix</i>' : ''}</button>`; }).join('')}
@@ -3551,6 +3552,32 @@ function nvMount(){
   t.addEventListener('scroll', nvDots, { passive:true });
   if (location.hash.includes('#gagner') || /[?&]s=(gagner|votes)/.test(location.hash)) { const id = /s=votes/.test(location.hash) ? 'votes' : 'gagner'; const el = document.getElementById(id); if (el) el.scrollIntoView({ block:'start' }); }
 }
+function openVoteInfo(){
+  closeVoteInfo();
+  const prev = document.activeElement;
+  const row = (ic, t, d, off) => `<li class="vi-row${off ? ' off' : ''}"><span class="vi-ic">${SVG(ICONS[ic])}</span><span class="vi-tx"><b>${t}</b><span>${d}</span></span>${off ? '<em>Bientôt</em>' : ''}</li>`;
+  const el = document.createElement('div'); el.className = 'cat-sheet vi-sheet';
+  el.innerHTML = `<button type="button" class="cat-sheet-bg" data-vi-close aria-label="Fermer"></button>
+  <div class="cat-sheet-panel vi-panel" role="dialog" aria-modal="true" aria-labelledby="vi-title">
+    <div class="vi-h"><h2 id="vi-title">Vos avantages</h2><button type="button" class="vi-x" data-vi-close aria-label="Fermer">${SVG(ICONS.close)}</button></div>
+    <ul class="vi-list">
+      ${row('vote', 'Pouvoir de vote', 'Vos Prelevo Coins fixent votre nombre de voix, de 1 à 12 selon votre niveau. Vous votez sur les prochaines fonctionnalités, les banques à prioriser et les défis d’économies à ajouter. Plus votre niveau est élevé, plus votre avis compte. Les résultats seront publiés avec l’arrivée du décompte côté serveur.')}
+      ${row('user', 'Bonus de parrainage', 'De x1 à x3 selon votre niveau.')}
+      ${row('trophy', 'Défis et badges', 'Relevez des défis d’économies et débloquez des badges, inclus à tous les niveaux.')}
+      ${row('star', '1 an de Premium offert', 'Réservé au niveau Élite.', true)}
+    </ul>
+    <p class="vi-foot">Les votes sont consultatifs. Les Prelevo Coins ne s’achètent pas, ne se transfèrent pas et ne peuvent pas être convertis en argent. Prelevo n’est pas une banque.</p>
+  </div>`;
+  el._prev = prev; document.body.appendChild(el);
+  el.querySelector('.vi-x').focus();
+}
+function closeVoteInfo(){ const n = document.querySelector('.vi-sheet'); if (!n) return; const p = n._prev; n.remove(); if (p && p.focus) p.focus(); }
+document.addEventListener('click', e => {
+  if (!e.target.closest) return;
+  if (e.target.closest('[data-vinfo]')) { openVoteInfo(); return; }
+  if (e.target.closest('[data-vi-close]')) closeVoteInfo();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('.vi-sheet')) closeVoteInfo(); });
 document.addEventListener('click', e => {
   const a = e.target.closest && e.target.closest('[data-nv]');
   if (a) { nvGo(+a.dataset.nv); return; }
