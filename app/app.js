@@ -299,6 +299,7 @@ function shadeHex(hex, t){
 }
 /** Garde la teinte, ajuste juste assez pour que le monogramme atteigne 4,5:1. */
 function tuneColor(hex){
+  return { bg: 'var(--av)', fg: 'var(--avf)' };
   let bg = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : '#0066FF';
   let fg = contrastHex('#FFFFFF', bg) >= contrastHex('#0A0B0D', bg) ? '#FFFFFF' : '#0A0B0D';
   for (let i = 0; i < 6 && contrastHex(fg, bg) < 4.5; i++) bg = shadeHex(bg, fg === '#FFFFFF' ? -.08 : .1);
@@ -306,14 +307,13 @@ function tuneColor(hex){
 }
 const bankTile = (b, cls = '', extra = '') => {
   const tuned = tuneColor(b.color);
-  const bg = tuned.bg, fg = (b.fg && contrastHex(b.fg, tuned.bg) >= 4.5) ? b.fg : tuned.fg;
+  const bg = tuned.bg, fg = tuned.fg;
   const ini = esc(b.ini || String(b.name || 'B').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase());
   const img = b.logo && /^https:\/\//.test(b.logo) ? `<img src="${esc(b.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('has-logo');this.remove()">` : '';
   return `<span class="bk-tile ${img ? 'has-logo' : ''} ${String(ini).length > 2 ? 'x3' : ''} ${cls}" style="--bk:${bg};--bkf:${fg}" title="${esc(b.name)}">${img}<b>${ini}</b>${extra}</span>`;
 };
 const logo = (s, cls='logo') => {
-  const color = /^#[0-9a-f]{6}$/i.test(s.color || '') ? s.color : '#0066FF';
-  return `<div class="${cls}" style="background:${color}">${esc(s.ini)}</div>`;
+  return `<div class="${cls} av">${esc(s.ini)}</div>`;
 };
 const increase = s => {
   if (s.prev == null) return 0;
@@ -604,7 +604,7 @@ function openCatSheet(name, current) {
     b.dataset.catPick = c.id;
     b.setAttribute('role', 'option');
     b.setAttribute('aria-selected', c.id === current ? 'true' : 'false');
-    b.style.setProperty('--cat-ink', c.color);
+    
     const chip = document.createElement('span');
     chip.className = 'cat';
     chip.setAttribute('aria-hidden', 'true');
@@ -848,9 +848,9 @@ function curveChart(curve, opt = {}){
   const stroke = opt.strokeGrad ? `url(#${sgid})` : color;
   const bands = opt.bands ? (() => {
     const yh = y(70), yl = y(30);
-    return `<rect x="0" y="0" width="${W}" height="${yh.toFixed(1)}" fill="#089981" fill-opacity=".10"/>`
-      + `<rect x="0" y="${yh.toFixed(1)}" width="${W}" height="${(yl - yh).toFixed(1)}" fill="#7E57C2" fill-opacity=".10"/>`
-      + `<rect x="0" y="${yl.toFixed(1)}" width="${W}" height="${(H - yl).toFixed(1)}" fill="#F23645" fill-opacity=".10"/>`
+    return `<rect x="0" y="0" width="${W}" height="${yh.toFixed(1)}" fill="#0066FF" fill-opacity=".08"/>`
+      + `<rect x="0" y="${yh.toFixed(1)}" width="${W}" height="${(yl - yh).toFixed(1)}" fill="#0066FF" fill-opacity=".04"/>`
+      + `<rect x="0" y="${yl.toFixed(1)}" width="${W}" height="${(H - yl).toFixed(1)}" fill="#8A909C" fill-opacity=".08"/>`
       + [70, 30].map(v => `<line x1="0" y1="${y(v).toFixed(1)}" x2="${W}" y2="${y(v).toFixed(1)}" stroke="currentColor" stroke-opacity=".35" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`).join('');
   })() : '';
   const g0 = opt.grad ? opt.grad[0] : .25, g1 = opt.grad ? opt.grad[1] : 0;
@@ -1024,7 +1024,7 @@ function spendTV(series){
   if (curve.length < 2) return '';
   const total = sumEuros(series, s => s.spend);
   const avg = sumEuros(curve, p => p.v) / curve.length;
-  return curveChart(curve, { color: '#F23645', h: 120, fmt: deskTitles().fmt, total, header: kEUR(total), link: 'desk', slot: 'spend', grad: [.42, 0], ref: avg, glow: true, tv: true, sw: 1.8, caption: 'Moyenne en pointillés', label: 'Dépenses. Glissez pour le détail.' });
+  return curveChart(curve, { color: '#0066FF', h: 120, fmt: deskTitles().fmt, total, header: kEUR(total), link: 'desk', slot: 'spend', grad: [.42, 0], ref: avg, glow: true, tv: true, sw: 1.8, caption: 'Moyenne en pointillés', label: 'Dépenses. Glissez pour le détail.' });
 }
 function resteLine(series){
   if (series.length < 2) return '';
@@ -1044,7 +1044,7 @@ function resteLine(series){
   const curve = [{ t: new Date(start), v: 0 }];
   for (let k = 0; k < n; k++) { acc += delta[k]; curve.push({ t: new Date(start + (k + 1) * step - 1), v: fromCents(acc) }); }
   const end = curve[curve.length - 1].v;
-  return curveChart(curve, { color: '#089981', h: 120, fmt: hourly ? 'hour' : 'day', signed: true, zero: true, header: sgnEUR(end), grad: [.40, 0], glow: true, tv: true, sw: 1.6, caption: 'Depuis le début de la période', link: 'desk', slot: 'income', label: 'Reste disponible : vos rentrées moins vos dépenses, cumulées. Glissez pour le détail.' });
+  return curveChart(curve, { color: '#0066FF', h: 120, fmt: hourly ? 'hour' : 'day', signed: true, zero: true, header: sgnEUR(end), grad: [.40, 0], glow: true, tv: true, sw: 1.6, caption: 'Depuis le début de la période', link: 'desk', slot: 'income', label: 'Reste disponible : vos rentrées moins vos dépenses, cumulées. Glissez pour le détail.' });
 }
 // Indice Prelevo : toujours calculé sur 1 an, puis découpé selon la période (1M…1A).
 // Rentrées lissées sur 61 jours (ramenées à 30) : un salaire qui sort de la
@@ -1129,7 +1129,7 @@ function indexCard(){
   return `${idxGauge(v)}
   <p class="pidx-when">Aujourd’hui · sur 30 jours glissants</p>
   <div class="tf pidx-tf" role="tablist" aria-label="Période de l’indice" style="--tf-i:${Object.keys(IDX_RANGES).indexOf(idxRange)}"><i class="tf-pill" aria-hidden="true"></i>${Object.entries(IDX_RANGES).map(([k, [l, n]]) => `<button type="button" role="tab" data-pidx-range="${k}" aria-selected="${idxRange === k}" class="${idxRange === k ? 'on' : ''}"${all.length < Math.min(n, 60) && k !== '1m' ? ' disabled' : ''}>${l}</button>`).join('')}</div>`
-    + curveChart(curve, { color: '#2563EB', spk: '#2563EB', padR: 78, zones: IDX_ZONES.map(x => ({ ...x, hi: Math.min(100, x.hi) })), h: 140, fmt: 'day', lo: 0, hi: 100, grad: [.38, 0], idx: true, glow: true, tv: true, sw: 2, header: '', caption: 'Glissez sur la courbe', label: 'Indice Prelevo de 0 à 100. Glissez pour voir le score de chaque jour.' })
+    + curveChart(curve, { color: '#0066FF', spk: '#0066FF', padR: 78, zones: IDX_ZONES.map(x => ({ ...x, hi: Math.min(100, x.hi) })), h: 140, fmt: 'day', lo: 0, hi: 100, grad: [.38, 0], idx: true, glow: true, tv: true, sw: 2, header: '', caption: 'Glissez sur la courbe', label: 'Indice Prelevo de 0 à 100. Glissez pour voir le score de chaque jour.' })
     + `<div class="pidx-legend">${IDX_ZONES.map(x => `<span><i style="background:${x.c}"></i>${x.l} <small>${x.lo}–${Math.min(100, x.hi) | 0}</small></span>`).join('')}</div>`;
 }
 function netLine(series){
@@ -1156,7 +1156,7 @@ function posteRows(){
   if (!tops.length) return emptyState('search', 'Aucune dépense', 'Rien sur cette période.');
   return tops.map(([k, v]) => {
     const c = Cats.BY[k] || Cats.BY.autre;
-    return `<div class="poste"><span><i class="poste-dot" style="background:${c.color}" aria-hidden="true"></i>${esc(c.l)}</span><b>${kEUR(v)}</b></div>`;
+    return `<div class="poste"><span><i class="poste-dot" aria-hidden="true"></i>${esc(c.l)}</span><b>${kEUR(v)}</b></div>`;
   }).join('');
 }
 screens.graphiques = () => {
@@ -1250,7 +1250,6 @@ function txRowEl(x, pp) {
   btn.dataset.catName = x.name || '';
   const current = Cats.BY[x.cat] ? x.cat : 'autre';
   btn.dataset.catCurrent = current;
-  btn.style.setProperty('--cat-ink', Cats.color(displayCat === 'virement' ? 'autre' : displayCat));
   btn.setAttribute('aria-label', 'Catégorie : ' + (CATS[displayCat] || CATS.autre).l + '. Modifier');
   btn.setAttribute('aria-haspopup', 'dialog');
   if (ICONS[(CATS[displayCat] || CATS.autre).ic]) btn.innerHTML = SVG(ICONS[(CATS[displayCat] || CATS.autre).ic]);
@@ -1384,7 +1383,7 @@ screens.dashboard = () => {
 
   <div class="section-h rise" style="--d:2"><h2>Mes banques</h2><a href="#/banques">Gérer</a></div>
   <div class="bk-cards rise" style="--d:2">
-    ${L.banks.map(b => `<a class="bk-card" href="#/banque/${b.id}" style="--bk:${/^#[0-9a-f]{6}$/i.test(b.color || '') ? b.color : '#0066FF'}">
+    ${L.banks.map(b => `<a class="bk-card" href="#/banque/${b.id}" style="--bk:var(--av)">
       <div class="bc-top">${bankTile(b, 'bk-ini', b.status === 'error' ? '<i class="st err"></i>' : b.status === 'expired' ? '<i class="st warn"></i>' : '')}<span class="bc-n">${b.accs.length} compte${b.accs.length > 1 ? 's' : ''}</span></div>
       <div class="bc-name">${esc(b.name)}</div><div class="bc-bal">${state.hideBalance ? '<span class="masked">••••</span>' : eur(b.total)}</div>
       <div class="bc-meta ${b.status === 'error' ? 't-red' : ''}">${b.status === 'error' ? 'Synchro en échec' : b.status === 'expired' ? 'Session expirée' : 'À jour · ' + b.sync}</div></a>`).join('')}
@@ -2056,7 +2055,7 @@ screens.banques = () => {
   <div class="topbar"><a class="back" href="#/dashboard">⟦back⟧</a><h1>Mes banques</h1>${demoTag}</div>
   <div class="bk-list">
   ${banks.map(b => {
-    const color = /^#[0-9a-f]{6}$/i.test(b.color || '') ? b.color : '#0066FF';
+    const color = 'var(--av)';
     const st = b.status === 'error' ? 'Synchro en échec' : b.status === 'expired' ? 'Session expirée' : 'À jour · ' + b.sync;
     return `<a class="bk-row" href="#/banque/${b.id}" style="--bk:${color}">${bankTile(b, 'bk-ini', b.status === 'error' ? '<i class="st err"></i>' : b.status === 'expired' ? '<i class="st warn"></i>' : '')}
       <div class="mid"><div class="name">${esc(b.name)}</div><div class="meta ${b.status === 'error' ? 't-red' : ''}">${esc(st)}</div></div>
@@ -2081,7 +2080,7 @@ screens.banque = (q, id) => {
   const tx = L.tx.filter(x => x.bank && x.bank.id === b.id);
   const up = (L.banks[0] && L.banks[0].id === b.id ? L.up : []).slice(0, 4);
   const st = b.status === 'error' ? 'Synchro en échec' : b.status === 'expired' ? 'Session expirée' : 'À jour · ' + b.sync;
-  const color = /^#[0-9a-f]{6}$/i.test(b.color || '') ? b.color : '#0066FF';
+  const color = 'var(--av)';
   return `
 <div class="screen bank-page">
   <div class="topbar"><a class="back" href="#/banques" aria-label="Retour">⟦back⟧</a><h1>${esc(b.name)}</h1>${demoTag}</div>
