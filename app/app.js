@@ -458,7 +458,7 @@ screens.onboarding = () => `
     : `<a class="btn" href="#/connexion">⟦mail⟧ Se connecter avec mon e-mail</a>
   <a class="btn ghost" href="?demo=1#/dashboard" style="margin-top:8px">Voir la démo (données d’exemple)</a>`) : `<a class="btn" href="#/connect">Connecter ma banque</a>
   ${PWX ? `<button class="btn ghost" id="pw-connect" style="margin-top:8px">⟦bank⟧ Connecter une banque de test</button>` : ''}`}
-  <p class="fine">⟦lock⟧ Gratuit pour commencer, Premium à ${prix(CFG.priceMonth)}/mois.<br>Accès en lecture seule via un agrégateur bancaire agréé. ${APP_NAME} ne peut jamais déplacer votre argent.<br>${API ? (bankEb() ? 'Bêta fermée – lecture seule, aucun paiement' : 'Bêta privée – banques de test uniquement') : 'Maquette – données d’exemple'}</p>
+  <p class="fine">⟦lock⟧ Gratuit pour commencer, Premium à ${prix(CFG.priceMonth)}/mois.<br>Accès en lecture seule via un agrégateur bancaire agréé. ${APP_NAME} ne peut jamais déplacer votre argent.<br>${API ? (bankEb() ? 'Lecture seule : Prelevo ne fait aucun paiement sur vos comptes.' : 'Bêta privée – banques de test uniquement') : 'Maquette – données d’exemple'}</p>
 </div>`;
 
 screens.connect = () => `
@@ -3291,7 +3291,7 @@ function render(){
   $('#app').innerHTML = icons(fn(new URLSearchParams(qs||''), ...args));
   flushMounts();
   const sub = $('#app .sub-bar'); if (sub) document.body.appendChild(sub);
-  if (API && ['onboarding','connexion','dashboard','connect','banques'].includes(name)){ const sc = $('#app').firstElementChild; if (sc && !sc.querySelector('.alpha-note')) sc.insertAdjacentHTML('afterbegin', bankEb() ? '<div class="alpha-note" role="note"><b>Bêta fermée</b> — lecture seule, aucun paiement</div>' : '<div class="alpha-note" role="note"><b>Bêta privée</b> — banques de test uniquement pour l’instant</div>'); }
+  if (API && ['onboarding','connexion','dashboard','connect','banques'].includes(name)){ const sc = $('#app').firstElementChild; if (sc && !sc.querySelector('.alpha-note')) sc.insertAdjacentHTML('afterbegin', bankEb() ? '<div class="alpha-note" role="note"><b>Bêta fermée</b> — lecture seule : Prelevo ne fait aucun paiement sur vos comptes</div>' : '<div class="alpha-note" role="note"><b>Bêta privée</b> — banques de test uniquement pour l’instant</div>'); }
   syncNav(name);
   resetScroll();
   if (name === 'graphiques') {
