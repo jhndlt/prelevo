@@ -168,6 +168,7 @@ function pwConnect(){
 
 const SVG = d => `<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICONS = {
+  trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M9 20h6"/>',
   refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
@@ -1378,6 +1379,8 @@ screens.dashboard = () => {
         : `<a class="rav locked" href="#/premium"><span>⟦lock⟧ Reste à vivre jusqu’à la paie</span><b>Premium</b></a>`}
   </section>
 
+  ${gamCard()}
+
   <div class="section-h rise" style="--d:2"><h2>Mes banques</h2><a href="#/banques">Gérer</a></div>
   <div class="bk-cards rise" style="--d:2">
     ${L.banks.map(b => `<a class="bk-card" href="#/banque/${b.id}" style="--bk:${/^#[0-9a-f]{6}$/i.test(b.color || '') ? b.color : '#0066FF'}">
@@ -2479,6 +2482,7 @@ screens.compte = () => {
     ${cbRow('#/prelevements','calendar','Prochains prélèvements')}
     ${cbRow('#/graphiques','trend','Graphiques')}
     ${cbRow('#/budget','pie','Budget')}
+    ${cbRow('#/defis','trophy','Défis et badges')}
     ${cbRow('#/banques','bank','Mes banques')}
     ${cbRow('#/assistant','bot','Assistant ' + APP_NAME)}
     ${cbRow('#/chat','chat','Support humain','En ligne','up')}
@@ -3267,7 +3271,7 @@ function resetScroll() {
   document.body.scrollTop = 0;
 }
 function syncNav(name) {
-  const tabbed = ['dashboard','graphiques','operations','abonnements','notifications','notif-reglages','premium','abo','banques','banque','budget','export'].includes(name) || (!screens[name]);
+  const tabbed = ['dashboard','graphiques','operations','abonnements','notifications','notif-reglages','premium','abo','banques','banque','budget','export','defis'].includes(name) || (!screens[name]);
   const bar = $('#tabbar');
   const tabName = name==='abo' || name==='operations' || name==='export' ? 'abonnements' : name==='budget' || name==='notif-reglages' ? 'notifications' : !screens[name] ? 'dashboard' : name;
   if (tabbed) { bar.hidden = false; bar.removeAttribute('aria-hidden'); }
@@ -3280,6 +3284,153 @@ function syncNav(name) {
   });
   paintAlertBadge();
 }
+// ---------- Badges et défis d’économies (lecture seule : on observe les dépenses synchronisées, rien n’est déplacé) ----------
+const GAM_KEY = 'prelevo-defis';
+const GAM_CAP = 60;                       // jours d’ouverture gardés
+function gamRead(){
+  const g = Store.readJSON(GAM_KEY, null);
+  const o = (g && typeof g === 'object' && !Array.isArray(g)) ? g : {};
+  return { days: Array.isArray(o.days) ? o.days : [], on: (o.on && typeof o.on === 'object') ? o.on : {}, done: Array.isArray(o.done) ? o.done : [], seen: Array.isArray(o.seen) ? o.seen : [] };
+}
+function gamWrite(g){ Store.writeJSON(GAM_KEY, g); }
+const ymd = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+function weekStart(ref){ const d = day0(ref); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+function monthStart(ref){ return new Date(ref.getFullYear(), ref.getMonth(), 1); }
+// Données d’exemple : 7 jours d’ouverture et un défi déjà lancé, pour la démo et les captures
+if (QS.has('demo') && !Store.readJSON(GAM_KEY, null)){
+  const g = gamRead(), n = new Date(NOW);
+  for (let i = 9; i >= 0; i--) g.days.push(ymd(new Date(n.getTime() - i * DAY_MS)));
+  g.on.courses = { at: weekStart(n).getTime() };
+  g.done.push({ id:'resto', at: weekStart(n).getTime() - DAY_MS });
+  gamWrite(g);
+}
+function gamMarkOpen(){
+  const g = gamRead(), k = ymd(nowRef());
+  if (g.days[g.days.length - 1] === k) return;
+  g.days = g.days.filter(d => d !== k).concat(k).slice(-GAM_CAP);
+  gamWrite(g);
+}
+function gamStreak(g){
+  const set = new Set(g.days); let n = 0; const d = day0(nowRef());
+  while (set.has(ymd(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+const spentIn = (tx, from, to, cats) => fromCents(tx.filter(x => x.amt < 0 && x.t >= from && x.t < to && (!cats || cats.includes(x.cat))).reduce((a, x) => a - toCents(x.amt), 0));
+// Défis : chacun calcule { val, cap, ok, txt } sur sa période, à partir des opérations synchronisées
+const DEFIS = [
+  { id:'resto', per:'week', ic:'coin', t:'Restos sous 40 €', d:'Dépensez moins de 40 € en restaurants et cafés cette semaine.',
+    calc:(tx, a, b) => { const v = spentIn(tx, a, b, ['resto']); return { val:v, cap:40, ok:v <= 40, txt: eur(v) + ' / 40 €' }; } },
+  { id:'courses', per:'week', ic:'receipt', t:'Courses maîtrisées', d:'Gardez vos courses sous 120 € cette semaine.',
+    calc:(tx, a, b) => { const v = spentIn(tx, a, b, ['courses']); return { val:v, cap:120, ok:v <= 120, txt: eur(v) + ' / 120 €' }; } },
+  { id:'plaisir', per:'week', ic:'heart', t:'Semaine sobre', d:'Moins de 30 € en shopping et loisirs cette semaine.',
+    calc:(tx, a, b) => { const v = spentIn(tx, a, b, ['shopping', 'loisirs']); return { val:v, cap:30, ok:v <= 30, txt: eur(v) + ' / 30 €' }; } },
+  { id:'noabo', per:'month', ic:'ban', t:'Aucun nouvel abonnement', d:'Aucun nouvel abonnement prélevé ce mois-ci.',
+    calc:(tx, a, b) => {
+      const before = new Set(tx.filter(x => x.cat === 'abo' && x.t < a).map(x => x.name));
+      const fresh = [...new Set(tx.filter(x => x.cat === 'abo' && x.amt < 0 && x.t >= a && x.t < b && !before.has(x.name)).map(x => x.name))];
+      return { val:fresh.length, cap:1, ok:!fresh.length, txt: fresh.length ? 'Nouveau : ' + fresh.slice(0, 2).join(', ') : 'Aucun nouveau pour l’instant', bin:true };
+    } },
+  { id:'mieux', per:'month', ic:'trend', t:'Mieux que le mois dernier', d:'Dépensez moins qu’à la même date le mois dernier (hors loyer).',
+    calc:(tx, a, b, now) => {
+      const skip = ['logement', 'revenu', 'epargne'];
+      const cur = fromCents(tx.filter(x => x.amt < 0 && x.t >= a && x.t < now && !skip.includes(x.cat)).reduce((s, x) => s - toCents(x.amt), 0));
+      const pa = new Date(a.getFullYear(), a.getMonth() - 1, 1), pn = new Date(pa.getFullYear(), pa.getMonth(), Math.min(now.getDate(), 28), now.getHours());
+      const prev = fromCents(tx.filter(x => x.amt < 0 && x.t >= pa && x.t < pn && !skip.includes(x.cat)).reduce((s, x) => s - toCents(x.amt), 0));
+      return { val:cur, cap:prev || 1, ok:cur <= prev, txt: eur(cur) + ' / ' + eur(prev) };
+    } },
+];
+function defiWindow(df, ref){
+  const a = df.per === 'week' ? weekStart(ref) : monthStart(ref);
+  const b = df.per === 'week' ? new Date(a.getTime() + 7 * DAY_MS) : new Date(a.getFullYear(), a.getMonth() + 1, 1);
+  return [a, b];
+}
+function defiState(df, tx, now){ const [a, b] = defiWindow(df, now); return { ...df.calc(tx, a, b, now), a, b, left: Math.max(1, Math.ceil((b - now) / DAY_MS)) }; }
+// Un défi dont la période est terminée est validé (ou non) avec les opérations de cette période
+function gamSettle(tx){
+  const g = gamRead(), now = nowRef(); let changed = false, won = [];
+  Object.keys(g.on).forEach(id => {
+    const df = DEFIS.find(x => x.id === id); if (!df) { delete g.on[id]; changed = true; return; }
+    const [a, b] = defiWindow(df, new Date(g.on[id].at));
+    if (now < b) return;
+    const r = df.calc(tx, a, b, b);
+    if (r.ok) { g.done.push({ id, at: b.getTime() }); won.push(df.t); }
+    delete g.on[id]; changed = true;
+  });
+  if (changed) gamWrite(g);
+  if (won.length) toast('Défi réussi : ' + won[0]);
+  return g;
+}
+const BADGES = [
+  { id:'banque', ic:'bank', t:'Première banque', d:'Connectez votre première banque.', ok:c => c.banks >= 1 },
+  { id:'multi', ic:'link', t:'Vue d’ensemble', d:'Connectez deux banques ou plus.', ok:c => c.banks >= 2 },
+  { id:'serie7', ic:'calendar', t:'7 jours d’affilée', d:'Ouvrez Prelevo 7 jours de suite.', ok:c => c.streak >= 7, p:c => [Math.min(7, c.streak), 7] },
+  { id:'fidele', ic:'clock', t:'Habitué', d:'Ouvrez Prelevo 30 jours différents.', ok:c => c.days >= 30, p:c => [Math.min(30, c.days), 30] },
+  { id:'defi1', ic:'check', t:'Premier défi', d:'Réussissez un défi d’économies.', ok:c => c.done >= 1 },
+  { id:'defi5', ic:'trophy', t:'Économe confirmé', d:'Réussissez 5 défis d’économies.', ok:c => c.done >= 5, p:c => [Math.min(5, c.done), 5] },
+  { id:'resil', ic:'scissors', t:'Ménage fait', d:'Résiliez un abonnement avec la résiliation guidée.', ok:c => c.resil >= 1 },
+  { id:'budget', ic:'pie', t:'Cap fixé', d:'Fixez un budget mensuel.', ok:c => c.budget },
+  { id:'tri', ic:'star', t:'Bien rangé', d:'Corrigez la catégorie d’une opération.', ok:c => c.cats >= 1 },
+];
+function gamCtx(g){
+  let budget = false; try { const b = readBudget(); budget = !!(b.global || Object.keys(b.cats).length); } catch (e) {}
+  return { banks: ledger().banks.length, streak: gamStreak(g), days: new Set(g.days).size, done: g.done.length, resil: state.resiliated.length, budget, cats: Object.keys(catOverrides()).length };
+}
+function defiBar(r){
+  const pct = r.bin ? (r.ok ? 0 : 100) : Math.round(Math.min(100, r.val * 100 / (r.cap || 1)));
+  const cls = r.ok ? '' : ' over';
+  return `<div class="budget-track${cls}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${r.bin ? (r.ok ? 100 : 100) : pct}%"></i></div>`;
+}
+function gamCard(){
+  try {
+    const L = ledger(), g = gamSettle(L.tx), c = gamCtx(g), now = nowRef();
+    const got = BADGES.filter(b => b.ok(c)).length;
+    const id = Object.keys(g.on)[0], df = id && DEFIS.find(x => x.id === id);
+    const r = df && defiState(df, L.tx, now);
+    return `<a class="gam-card rise" style="--d:1" href="#/defis">
+      <span class="gam-ic">⟦trophy⟧</span>
+      <span class="gam-mid"><b>${df ? esc(df.t) : 'Défis et badges'}</b>
+        <span>${df ? (r.ok ? 'En bonne voie' : 'Plafond dépassé') + ' · ' + r.txt : got + ' badge' + (got > 1 ? 's' : '') + ' sur ' + BADGES.length + ' · lancez un défi d’économies'}</span>
+        ${df ? defiBar(r) : ''}</span>
+      <span class="gam-streak" aria-label="Série de ${c.streak} jours">${c.streak}<i>j</i></span></a>`;
+  } catch (e) { return ''; }
+}
+screens.defis = () => {
+  const L = ledger(), g = gamSettle(L.tx), c = gamCtx(g), now = nowRef();
+  const got = BADGES.filter(b => b.ok(c)).length;
+  const per = df => df.per === 'week' ? 'Cette semaine' : 'Ce mois-ci';
+  const active = DEFIS.filter(df => g.on[df.id]), idle = DEFIS.filter(df => !g.on[df.id]);
+  const won = id => g.done.filter(x => x.id === id).length;
+  return `
+<div class="screen">
+  <div class="topbar"><a class="back" href="#/dashboard" aria-label="Retour">⟦back⟧</a><h1>Défis et badges</h1>${demoTag}</div>
+  <div class="gam-kpis">
+    <div><b>${c.streak}</b><span>jour${c.streak > 1 ? 's' : ''} d’affilée</span></div>
+    <div><b>${c.done}</b><span>défi${c.done > 1 ? 's' : ''} réussi${c.done > 1 ? 's' : ''}</span></div>
+    <div><b>${got}/${BADGES.length}</b><span>badges</span></div>
+  </div>
+  <p class="gam-note">Les défis observent vos dépenses synchronisées. Prelevo ne déplace jamais d’argent.</p>
+  ${active.length ? `<p class="acct-k">En cours</p>` + active.map(df => { const r = defiState(df, L.tx, now); return `
+    <div class="gam-defi on"><div class="gd-top"><span class="gd-ic">⟦${df.ic}⟧</span><div class="gd-mid"><b>${esc(df.t)}</b><span>${esc(df.d)}</span></div></div>
+      ${defiBar(r)}
+      <div class="budget-legend"><span>${esc(r.txt)}</span><span>${r.ok ? 'En bonne voie' : 'Raté pour cette période'} · ${r.left} j restant${r.left > 1 ? 's' : ''}</span></div>
+      <button type="button" class="gd-stop" data-defi-stop="${df.id}">Abandonner</button></div>`; }).join('') : ''}
+  <p class="acct-k">Défis disponibles</p>
+  ${idle.map(df => `<div class="gam-defi"><div class="gd-top"><span class="gd-ic">⟦${df.ic}⟧</span><div class="gd-mid"><b>${esc(df.t)}</b><span>${esc(df.d)}</span><i>${per(df)}${won(df.id) ? ' · réussi ' + won(df.id) + ' fois' : ''}</i></div>
+    <button type="button" class="gd-go" data-defi-start="${df.id}">Lancer</button></div></div>`).join('')}
+  <p class="acct-k">Badges · ${got} sur ${BADGES.length}</p>
+  <div class="gam-badges">${BADGES.map(b => { const ok = b.ok(c), p = !ok && b.p && b.p(c); return `
+    <div class="gam-badge ${ok ? 'ok' : 'locked'}"><span class="gb-ic">⟦${ok ? b.ic : 'lock'}⟧</span><b>${esc(b.t)}</b><span>${ok ? 'Obtenu' : esc(b.d)}</span>${p ? `<i>${p[0]}/${p[1]}</i>` : ''}</div>`; }).join('')}</div>
+</div>`;
+};
+document.addEventListener('click', e => {
+  const s = e.target.closest && e.target.closest('[data-defi-start],[data-defi-stop]');
+  if (!s) return;
+  const g = gamRead();
+  if (s.dataset.defiStart){ g.on[s.dataset.defiStart] = { at: nowRef().getTime() }; gamWrite(g); toast('Défi lancé, bonne chance !'); }
+  else { delete g.on[s.dataset.defiStop]; gamWrite(g); toast('Défi abandonné'); }
+  render();
+});
+
 function render(){
   closeCatSheet();
   leaveView();
@@ -3302,6 +3453,7 @@ function render(){
   }
   if (name !== 'verrouillage') { lockPhase = ''; setupBuf = ''; setupA = ''; }
   if (name === 'soutiens') loadSupporters();
+  if (name==='dashboard' || name==='defis') gamMarkOpen();
   if (name==='dashboard') animateHome();
   if (name==='scan') runScan();
   if (name==='pwscan' && PWX && !LIVE) runPwScan();

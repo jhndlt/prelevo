@@ -1212,3 +1212,35 @@ html:not([data-theme="dark"]) .tv-card .sp-read b{color:var(--ink)}
 .onb-priv b{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink,#0A0B0D)}
 .onb-priv b svg{width:16px;height:16px;color:#1652F0}
 .onb-priv span{font-size:13px;line-height:1.45;color:var(--ink2,#5B616E)}
+
+/* ---------- Défis et badges ---------- */
+.gam-card{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin:0 0 18px;color:inherit;box-shadow:var(--shadow)}
+.gam-ic,.gd-ic,.gb-ic{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--soft);color:var(--accent)}
+.gam-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.gam-mid b{font-size:15px;font-weight:650}
+.gam-mid>span{font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gam-mid .budget-track{margin:6px 0 0;height:6px}
+.gam-streak{flex:none;font-weight:700;font-size:18px;color:var(--ink)}
+.gam-streak i{font-style:normal;font-size:12px;color:var(--ink2);margin-left:1px}
+.gam-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 10px}
+.gam-kpis div{background:var(--soft);border-radius:16px;padding:12px;text-align:center}
+.gam-kpis b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.gam-kpis span{font-size:12px;color:var(--ink2)}
+.gam-note{font-size:13px;color:var(--ink2);margin:0 0 6px}
+.gam-defi{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin:0 0 10px;box-shadow:var(--shadow)}
+.gam-defi.on{border-color:var(--accent)}
+.gd-top{display:flex;align-items:center;gap:12px}
+.gd-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.gd-mid b{font-size:15px;font-weight:650}
+.gd-mid span{font-size:13px;color:var(--ink2)}
+.gd-mid i{font-style:normal;font-size:12px;color:var(--accent);font-weight:600}
+.gd-go{flex:none;border:0;border-radius:99px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:14px;padding:8px 14px;min-height:36px}
+.gd-stop{border:0;background:none;color:var(--ink2);font:inherit;font-size:13px;padding:6px 0 0;text-decoration:underline}
+.gam-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.gam-badge{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 8px}
+.gam-badge b{font-size:13px;font-weight:650;line-height:1.2}
+.gam-badge span{font-size:11px;color:var(--ink2);line-height:1.3}
+.gam-badge i{font-style:normal;font-size:11px;font-weight:600;color:var(--accent)}
+.gam-badge.ok .gb-ic{background:var(--accent);color:#fff}
+.gam-badge.locked{opacity:.6}
+.gam-badge.locked .gb-ic{color:var(--ink2)}
