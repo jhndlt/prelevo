@@ -45,6 +45,9 @@
       const q = new URLSearchParams(location.search);
       const back = q.has('connection_id') || q.has('connection_ids') || q.has('code') || q.has('error');
       if (!q.has('state') || !back) return null;
+      // Le state doit être celui de NOTRE demande (anti-CSRF, en plus du contrôle serveur).
+      let mine = null; try { mine = sessionStorage.getItem(K_STATE); } catch(e){}
+      if (!mine || mine !== q.get('state')) { try { sessionStorage.removeItem(K_STATE); } catch(e){} return null; }
       return {
         state: q.get('state'),
         connection_id: q.get('connection_id') || undefined,
