@@ -282,8 +282,11 @@ function cancelInfo(s){
 const FREQ = { week:'hebdo', month:'mensuel', quarter:'trimestriel', year:'annuel' };
 function nextDebit(s){
   if (s.live) return nextLive(s);
-  const n = nowRef(); let d = new Date(n.getFullYear(), n.getMonth(), s.day || 1);
-  if (d < day0(n)) d = new Date(n.getFullYear(), n.getMonth() + 1, s.day || 1);
+  const n = nowRef();
+  // Jour borné à la fin du mois : un prélèvement du 31 tombe le 28/29 février ou le 30, jamais le mois suivant.
+  const at = (y, m) => new Date(y, m, Math.min(s.day || 1, new Date(y, m + 1, 0).getDate()));
+  let d = at(n.getFullYear(), n.getMonth());
+  if (d < day0(n)) d = at(n.getFullYear(), n.getMonth() + 1);
   return d;
 }
 const subBank = s => { if (LIVE){ const b = liveLedger().banks[0]; return b; } return LINKED[0]; };
