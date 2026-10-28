@@ -13,6 +13,12 @@ window.PRELEVO_LANDING = {
      - 'json'        : n'importe quel endpoint qui accepte un POST JSON { email, source, date } */
   waitlist: { provider: 'formsubmit', endpoint: 'https://formsubmit.co/ajax/4e6ccd8efe4049c714bdbd1134e55349', field: 'email' },
 
+  /* Bêta fermée (#beta). Appel REST comme server/src/store.js : fetch, en-têtes apikey
+     et Authorization. Clé anon publique uniquement — jamais la clé service.
+     url et anonKey vides : le formulaire reste affiché, l’envoi explique qu’il n’est pas ouvert.
+     Migration à coller à la main : server/supabase/migrations/20261028200000_waitlist.sql */
+  supabase: { url: '', anonKey: '' },
+
   /* Éditeur et contact affichés dans les mentions / la confidentialité. */
   publisher: 'Jhn Dlt',
   contactEmail: 'jhn.dlt@mail.grokbot.com'

@@ -6,8 +6,10 @@ En ligne (après publication) : https://jhndlt.github.io/prelevo/
 
 ## Réglages (config.js à la racine)
 - `incentive` : texte de l'offre de lancement (« Les 500 premiers inscrits : 3 mois de Premium offerts »), `enabled:false` pour la masquer.
-- `waitlist` : où partent les inscriptions (`provider` : none | google-form | formspree | apps-script | json, `endpoint`, `field`).
+- `waitlist` : où partent les inscriptions de la liste d’attente (`provider` : none | google-form | formspree | apps-script | json, `endpoint`, `field`).
   Avec `none`, rien n'est envoyé : l'e-mail reste dans le navigateur du visiteur (aperçu uniquement, à ne pas publier tel quel).
+- `supabase` : bêta fermée (`#beta`). `url` du projet et clé **anon** publique. Jamais la clé service. L’appel est un `POST /rest/v1/rpc/join_waitlist`, comme le `fetch` de `server/src/store.js`. Tant que `url` ou `anonKey` est vide, le formulaire ne part pas.
+- Migration à coller à la main dans l’éditeur SQL (ne pas l’appliquer depuis ce dépôt) : `server/supabase/migrations/20261028200000_waitlist.sql`.
 - `publisher`, `contactEmail` : affichés dans Mentions légales et Confidentialité.
 
 ## Banque (Clever Cloud, app prelevo-api)
@@ -24,7 +26,7 @@ Lecture seule via Enable Banking quand `BANK_PROVIDER=enablebanking`. Le détail
 - `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` (clé service uniquement)
 - `PORT` (fourni par Clever Cloud)
 
-Répertoire de déploiement : `server/` (`npm start`). Migration SQL : `server/supabase/migrations/20261021170000_enablebanking.sql`. Pas de paiement. Ne pas activer `ENABLEBANKING_FIXTURE` en production.
+Répertoire de déploiement : `server/` (`npm start`). Migrations SQL (à coller à la main, jamais lancées depuis le site) : `server/supabase/migrations/20261021170000_enablebanking.sql`, `server/supabase/migrations/20261028200000_waitlist.sql`. Pas de paiement. Ne pas activer `ENABLEBANKING_FIXTURE` en production.
 
 ## Divers
 - Aucun cookie, aucun traceur, police Inter auto-hébergée (assets/fonts).
