@@ -831,7 +831,7 @@ addEventListener('resize', () => { if (document.querySelector('.home-spark')) sc
 function spark(curve){
   if (!curve || curve.length < 2) return '';
   const tf = homeTfMeta();
-  // viewBox calé sur un iPhone 393×852 : la courbe CSS fait ~40 % de la hauteur, bord à bord.
+  // viewBox étiré bord à bord. La hauteur visuelle est dans le CSS (~23 % de l’écran, 170–220 px).
   const W = 390, H = 340, PADL = 0, PADR = 0, PADT = 28, PADB = 16;
   const vs = curve.map(p => p.v), lo = Math.min(...vs), hi = Math.max(...vs), r = hi - lo || 1;
   const x = i => PADL + (i / (curve.length - 1)) * (W - PADL - PADR);
