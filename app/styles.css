@@ -401,6 +401,16 @@ body:has(.sub-bar) .app{padding-bottom:calc(150px + env(safe-area-inset-bottom))
 .ad-brand i{font-style:normal;color:var(--muted);font-weight:400;margin-left:4px}
 .ad-cta{font-size:12.5px;font-weight:600;color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:6px 11px;white-space:nowrap}
 
+/* Guide du créateur : carte éditoriale, pas une pub sponsorisée */
+.guide-card{margin-top:28px;padding:16px 16px 12px;border:1px solid var(--line);border-radius:16px;background:var(--bg);color:var(--ink)}
+.guide-card p{font-size:14.5px;line-height:1.5}
+.guide-card .btn-pair{margin:14px 0 2px}
+.guide-card .btn{min-height:48px;font-size:14.5px;padding:0 8px;white-space:normal}
+.guide-card .guide-fine{margin-top:8px;font-size:12px;line-height:1.4;color:var(--muted);text-align:center}
+.guide-after{margin:4px 0 18px;font-size:15px;line-height:1.45;text-align:center;color:var(--ink)}
+.guide-after a{color:var(--accent);font-weight:600}
+.cb-ic.guide-emoji{font-size:20px;line-height:1}
+
 /* Banque de test Powens (sandbox) */
 .demo.live{color:var(--accent-ink);background:var(--accent,#0066FF);padding:3px 8px;border-radius:999px;font-weight:650;letter-spacing:0}
 .pw-note{margin:12px 0 4px;padding:12px 14px;border:1px dashed var(--line,#D9DEE7);border-radius:14px;font-size:12.5px;line-height:1.45;color:var(--ink2,#3A4458)}

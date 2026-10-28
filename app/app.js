@@ -338,6 +338,61 @@ const adSlot = k => { if (isP()) return ''; const a = ADS[k]; const color = /^#[
     <span class="ad-logo" style="background:${color}">${esc(a.ini)}</span>
     <div class="ad-txt"><span class="ad-brand">${esc(a.brand)} <i>${esc(a.tag)}</i></span><b>${esc(a.title)}</b><span>${esc(a.text)}</span></div>
     <span class="ad-cta">${esc(a.cta)}</span></a></div>`; };
+
+/* Guide du créateur — distinct des pubs « Sponsorisé » (affiché en Gratuit et en Premium, jamais en popup).
+   La carte des prélèvements s’affiche au plus une fois par semaine. Masquer est mémorisé tout de suite. */
+const GUIDE_URL = 'https://www.amazon.fr/dp/B0HPGM3XXT';
+const GUIDE_CARD_KEY = 'prelevo-guide-card';
+const GUIDE_CANCEL_KEY = 'prelevo-guide-cancel';
+const GUIDE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+let guideOnDebits = false;
+let guideCancelHeld = false;
+function guideRec() {
+  const rec = Store.readJSON(GUIDE_CARD_KEY, null);
+  return rec && typeof rec === 'object' && !Array.isArray(rec) ? rec : null;
+}
+function guideSeenThisWeek(ts, now) {
+  return Number.isFinite(ts) && ts > 0 && now - ts < GUIDE_WEEK_MS;
+}
+function guideCardBlocked(now) {
+  const rec = guideRec();
+  if (!rec) return false;
+  return guideSeenThisWeek(Number(rec.dismissedAt), now) || guideSeenThisWeek(Number(rec.shownAt), now);
+}
+function guideCardVisible() {
+  if (guideOnDebits) return true;
+  const now = Date.now();
+  if (guideCardBlocked(now)) return false;
+  Store.writeJSON(GUIDE_CARD_KEY, Object.assign({}, guideRec() || {}, { shownAt: now }));
+  guideOnDebits = true;
+  return true;
+}
+function hideGuideCard() {
+  guideOnDebits = false;
+  Store.writeJSON(GUIDE_CARD_KEY, Object.assign({}, guideRec() || {}, { dismissedAt: Date.now() }));
+}
+function guideCardHtml() {
+  if (!guideCardVisible()) return '';
+  return `<aside class="guide-card" id="guide-card" aria-label="Guide du créateur de Prelevo">
+    <p>Vous voulez aller plus loin ? ‹ Fini les fins de mois dans le rouge ›, le guide écrit par le créateur de Prelevo : inventaire, résiliations, dates de prélèvement, épargne de secours. Kindle 4,99 € · Broché 7,99 €.</p>
+    <div class="btn-pair">
+      <a class="btn" href="${GUIDE_URL}" target="_blank" rel="noopener">Voir sur Amazon</a>
+      <button type="button" class="btn ghost" id="hide-guide">Masquer</button>
+    </div>
+    <p class="guide-fine">Guide pratique, pas un conseil financier.</p>
+  </aside>`;
+}
+function guideCancelNote() {
+  if (!guideCancelHeld && Store.readRaw(GUIDE_CANCEL_KEY)) return '';
+  if (!guideCancelHeld) {
+    Store.writeRaw(GUIDE_CANCEL_KEY, '1');
+    guideCancelHeld = true;
+  }
+  return `<p class="guide-after">Bien joué 👏 Le chapitre 3 du guide vous aide à faire le tri dans vos abonnements. <a href="${GUIDE_URL}" target="_blank" rel="noopener">Le guide →</a></p>`;
+}
+function guideMenuRow() {
+  return `<a class="cb-row" id="guide-menu" href="${GUIDE_URL}" target="_blank" rel="noopener"><span class="cb-ic guide-emoji" aria-hidden="true">📘</span><span class="cb-lab">Le guide</span><span class="cb-go ext">⟦ext⟧</span></a>`;
+}
 const teaser = (title, text) => `<a class="teaser" href="#/premium"><div class="tl">⟦lock⟧</div><div><b>${title}</b><span>${text}</span></div><div class="tc">Débloquer</div></a>`;
 const Toasts = (() => {
   let timer = 0;
@@ -1694,6 +1749,7 @@ ${USER.prenom} ${USER.nom}`;
   <p style="font-size:30px;font-weight:650;color:var(--mint);margin:14px 0 2px">+${eur(annual(s.price))}</p>
   <p class="muted small">économisés sur un an</p>
 </div>
+${guideCancelNote()}
 <a class="btn" href="#/dashboard">Voir mes économies</a>
 <a class="btn ghost" href="#/abonnements?vue=recurrents&f=eco">Continuer à faire le ménage</a>
 </div>`;
@@ -2504,6 +2560,7 @@ screens.compte = () => {
   </a>
   <p class="cb-k">Encore plus d’options</p>
   <div class="cb-list">
+    ${guideMenuRow()}
     <button type="button" class="cb-row" id="toggle-balance" role="switch" aria-checked="${state.hideBalance ? 'true' : 'false'}" aria-label="Masquer le solde"><span class="cb-ic">⟦${state.hideBalance ? 'eyeoff' : 'eye'}⟧</span><span class="cb-lab">Masquer le solde</span><span class="sw ${state.hideBalance ? 'on' : ''}" aria-hidden="true"></span></button>
     ${cbRow('#/abonnements','receipt','Abonnements')}
     ${cbRow('#/operations','doc','Transactions')}
@@ -2658,6 +2715,7 @@ screens.prelevements = () => {
   ${rows.length ? rows.map(r => `<div class="debit-row"><div class="debit-h"><b>${esc(r.s.name)}</b><span>${esc(dayLabel(r.debit))} · ${euroPlain(r.s.price)}</span></div><div class="seg debit-seg" role="radiogroup" aria-label="Délai pour ${esc(r.s.name)}">${seg(r.s, r.lead)}</div></div>`).join('') : '<p class="push-lead">Aucun prélèvement détecté pour l’instant.</p>'}
   <p class="push-ios">Le rappel s’affiche sur cet appareil si vous avez activé les notifications. Avec la clé du serveur, le même rappel part aussi en notification push.</p>
   <a class="btn ghost" href="#/notif-push">Notifications sur cet appareil</a>
+  ${guideCardHtml()}
 </div>`;
 };
 function ululeHref() {
@@ -3624,6 +3682,7 @@ function render(){
   const [path, qs] = raw.split('?');
   if (path === 'alertes' || path.startsWith('alertes/')) { location.replace('#/notifications' + (qs ? '?' + qs : '')); return; }
   const [name, ...args] = path.split('/');
+  if (name !== 'prelevements') guideOnDebits = false;
   const fn = screens[name] || screens.dashboard;
   $('#app').innerHTML = icons(fn(new URLSearchParams(qs||''), ...args));
   flushMounts();
@@ -3731,6 +3790,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('#lock-enroll')) { enrollBio(); return; }
   if (e.target.closest('#lock-change')) { lockPhase = 'current'; lockPhaseAfterCurrent = 'choose'; setupBuf = ''; render(); return; }
   if (e.target.closest('#lock-off')) { lockPhase = 'current'; lockPhaseAfterCurrent = 'off'; setupBuf = ''; render(); return; }
+  if (e.target.closest('#hide-guide')) { hideGuideCard(); render(); return; }
   const leadBtn = e.target.closest && e.target.closest('[data-lead]');
   if (leadBtn) {
     const all = readLeads();
@@ -3856,6 +3916,8 @@ document.addEventListener('click', e => {
     Store.remove(LOCK_KEY);
     Store.remove(LEAD_KEY);
     Store.remove(SENT_KEY);
+    Store.remove(GUIDE_CARD_KEY);
+    Store.remove(GUIDE_CANCEL_KEY);
     if (API && API.pushUnsubscribe && API.loggedIn()) API.pushUnsubscribe().catch(() => {});
     const demo = QS.has('demo') || (!API && !LIVE);
     const q = location.search || (demo ? '?demo=1' : '');
