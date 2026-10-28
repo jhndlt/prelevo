@@ -831,7 +831,7 @@ addEventListener('resize', () => { if (document.querySelector('.home-spark')) sc
 function spark(curve){
   if (!curve || curve.length < 2) return '';
   const tf = homeTfMeta();
-  // viewBox calé sur un iPhone 393×852 : la courbe CSS fait ~40 % de la hauteur, bord à bord.
+  // viewBox étiré bord à bord. La hauteur visuelle vient du CSS : la courbe remplit l’accueil jusqu’aux défis.
   const W = 390, H = 340, PADL = 0, PADR = 0, PADT = 28, PADB = 16;
   const vs = curve.map(p => p.v), lo = Math.min(...vs), hi = Math.max(...vs), r = hi - lo || 1;
   const x = i => PADL + (i / (curve.length - 1)) * (W - PADL - PADR);
@@ -1444,6 +1444,7 @@ screens.dashboard = () => {
 <div class="screen home ${_homeAnimated ? 'static' : ''}">
   ${brandBar(`<div class="top-acts"><a class="gear ai-entry" href="#/assistant" aria-label="Assistant Prelevo">⟦spark⟧</a><a class="gear" href="#/compte" aria-label="Mon compte">⟦user⟧</a></div>`)}
   <div class="home-body">
+  <div class="home-fold">
   <div class="greet rise" style="--d:0"><div class="g-row"><p class="g-day">${cap(JOURS[nowRef().getDay()])} ${nowRef().getDate()} ${MOIS[nowRef().getMonth()]}</p>
     <div class="g-tags"><span class="plan-pill ${P ? 'p' : ''}">${P ? 'Premium' : 'Gratuit'}</span>${demoTag}</div></div><h1>Bonjour${esc(prenom)}</h1></div>
 
@@ -1459,20 +1460,13 @@ screens.dashboard = () => {
     <div class="delta" id="sp-delta">${state.hideBalance ? 'Solde masqué' : `${delta >= 0 ? '⟦trend⟧' : ''}<b class="${delta >= 0 ? 'pos' : ''}">${signed(delta)}</b>${Math.abs(pp) >= 0.5 ? ` <i class="delta-pct ${delta >= 0 ? 'up' : 'down'}">${ppTxt}</i>` : ''} ${homeTf === 'TOUT' ? 'depuis le début' : 'sur ' + tf[2]}`}</div>
     ${spark(curve)}
     <div class="tf" role="tablist" aria-label="Période du graphique" style="--tf-i:${Math.max(0, HOME_TF.findIndex(([k]) => k === homeTf))}"><i class="tf-pill" aria-hidden="true"></i>${HOME_TF.map(([k, lab]) => `<button type="button" role="tab" data-tf="${k}" aria-selected="${k === homeTf ? 'true' : 'false'}" class="${k === homeTf ? 'on' : ''}">${lab}</button>`).join('')}</div>
-    ${P ? `<a class="rav" href="#/abonnements"><span>Reste à vivre jusqu’à la paie</span><b>${state.hideBalance ? '<span class="masked">••••</span>' : eur(t.reste)}</b></a>`
-        : `<a class="rav locked" href="#/premium"><span>⟦lock⟧ Reste à vivre jusqu’à la paie</span><b>Premium</b></a>`}
   </section>
 
   ${gamCard()}
-
-  <div class="section-h rise" style="--d:2"><h2>Mes banques</h2><a href="#/banques">Gérer</a></div>
-  <div class="bk-cards rise" style="--d:2">
-    ${L.banks.map(b => `<a class="bk-card" href="#/banque/${b.id}" style="--bk:var(--av)">
-      <div class="bc-top">${bankTile(b, 'bk-ini', b.status === 'error' ? '<i class="st err"></i>' : b.status === 'expired' ? '<i class="st warn"></i>' : '')}<span class="bc-n">${b.accs.length} compte${b.accs.length > 1 ? 's' : ''}</span></div>
-      <div class="bc-name">${esc(b.name)}</div><div class="bc-bal">${state.hideBalance ? '<span class="masked">••••</span>' : eur(b.total)}</div>
-      <div class="bc-meta ${b.status === 'error' ? 't-red' : ''}">${b.status === 'error' ? 'Synchro en échec' : b.status === 'expired' ? 'Session expirée' : 'À jour · ' + b.sync}</div></a>`).join('')}
-    ${!LIVE && !P ? `<a class="bk-card add" href="#/premium">⟦plus⟧<span>Ajouter une banque</span><b>Premium</b></a>` : ''}
   </div>
+
+  ${P ? `<a class="rav" href="#/abonnements"><span>Reste à vivre jusqu’à la paie</span><b>${state.hideBalance ? '<span class="masked">••••</span>' : eur(t.reste)}</b></a>`
+      : `<a class="rav locked" href="#/premium"><span>⟦lock⟧ Reste à vivre jusqu’à la paie</span><b>Premium</b></a>`}
 
   <div class="section-h rise" style="--d:2"><h2>Dépenses</h2><a href="#/graphiques">Mensuel</a></div>
   <div class="panel spend-card rise" style="--d:2">${state.hideBalance ? '<p class="insight">Graphique masqué avec le solde.</p>' : spendBars(L.tx, 'var(--accent)')}</div>
@@ -1489,17 +1483,6 @@ screens.dashboard = () => {
       : `<p class="insight">Aucun prélèvement prévu dans les 7 prochains jours. Profitez-en.</p>`}
   </div>
 
-  <div class="section-h rise" style="--d:3"><h2>Mes comptes</h2><a href="#/banques">Gérer</a></div>
-  <div class="panel accts rise" style="--d:3">
-    ${L.banks.map(b => `<div class="bank-g">
-      <a class="bank-h" href="#/banque/${b.id}">${bankTile(b, 'bk-ini', b.status === 'error' ? '<i class="st err"></i>' : b.status === 'expired' ? '<i class="st warn"></i>' : '')}
-        <div class="mid"><div class="name">${esc(b.name)}</div><div class="meta ${b.status === 'error' ? 't-red' : ''}">${b.status === 'error' ? 'Synchro en échec · reconnecter' : b.status === 'expired' ? 'Session expirée' : 'À jour · ' + b.sync}</div></div>
-        <div class="amt">${eur(b.total)}</div></a>
-      ${b.accs.map(a => `<div class="acc ${a.counted === false ? 'off' : ''}"><span>${esc(a.name)}</span><span>${state.hideBalance ? '<span class="masked">••••</span>' : (a.currency && a.currency !== 'EUR' ? (a.balance || 0).toLocaleString('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' ' + esc(a.currency) : eur(a.balance))}</span></div>`).join('')}
-    </div>`).join('')}
-    ${!LIVE && !P ? `<a class="bank-add" href="#/premium">⟦plus⟧<span>Ajouter une banque</span><b>Premium</b></a>` : ''}
-  </div>
-
   <a class="subs-card rise" style="--d:4" href="#/abonnements">
     <div class="sc-top">${catChip('abo')}<div class="mid"><div class="name">Transactions</div><div class="meta">${t.list.length} actif${t.list.length > 1 ? 's' : ''}${nextSub ? ' · prochain : ' + esc(nextSub.name) + ', ' + dayLabel(nextSub.t).toLowerCase() : ''}</div></div>
       <div class="amt">${eur(t.monthly)}<small>/mois</small></div></div>
@@ -1511,6 +1494,26 @@ screens.dashboard = () => {
       ${t.found ? (P ? `<span class="hchip blue">${eur(t.found)}/mois à économiser</span>` : `<span class="hchip blue">⟦lock⟧ ${eur(t.found)}/mois d’économies repérées</span>`) : ''}
     </div>
   </a>
+
+  <div class="section-h rise" style="--d:2"><h2>Mes banques</h2><a href="#/banques">Gérer</a></div>
+  <div class="bk-cards rise" style="--d:2">
+    ${L.banks.map(b => `<a class="bk-card" href="#/banque/${b.id}" style="--bk:var(--av)">
+      <div class="bc-top">${bankTile(b, 'bk-ini', b.status === 'error' ? '<i class="st err"></i>' : b.status === 'expired' ? '<i class="st warn"></i>' : '')}<span class="bc-n">${b.accs.length} compte${b.accs.length > 1 ? 's' : ''}</span></div>
+      <div class="bc-name">${esc(b.name)}</div><div class="bc-bal">${state.hideBalance ? '<span class="masked">••••</span>' : eur(b.total)}</div>
+      <div class="bc-meta ${b.status === 'error' ? 't-red' : ''}">${b.status === 'error' ? 'Synchro en échec' : b.status === 'expired' ? 'Session expirée' : 'À jour · ' + b.sync}</div></a>`).join('')}
+    ${!LIVE && !P ? `<a class="bk-card add" href="#/premium">⟦plus⟧<span>Ajouter une banque</span><b>Premium</b></a>` : ''}
+  </div>
+
+  <div class="section-h rise" style="--d:3"><h2>Mes comptes</h2><a href="#/banques">Gérer</a></div>
+  <div class="panel accts rise" style="--d:3">
+    ${L.banks.map(b => `<div class="bank-g">
+      <a class="bank-h" href="#/banque/${b.id}">${bankTile(b, 'bk-ini', b.status === 'error' ? '<i class="st err"></i>' : b.status === 'expired' ? '<i class="st warn"></i>' : '')}
+        <div class="mid"><div class="name">${esc(b.name)}</div><div class="meta ${b.status === 'error' ? 't-red' : ''}">${b.status === 'error' ? 'Synchro en échec · reconnecter' : b.status === 'expired' ? 'Session expirée' : 'À jour · ' + b.sync}</div></div>
+        <div class="amt">${eur(b.total)}</div></a>
+      ${b.accs.map(a => `<div class="acc ${a.counted === false ? 'off' : ''}"><span>${esc(a.name)}</span><span>${state.hideBalance ? '<span class="masked">••••</span>' : (a.currency && a.currency !== 'EUR' ? (a.balance || 0).toLocaleString('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' ' + esc(a.currency) : eur(a.balance))}</span></div>`).join('')}
+    </div>`).join('')}
+    ${!LIVE && !P ? `<a class="bank-add" href="#/premium">⟦plus⟧<span>Ajouter une banque</span><b>Premium</b></a>` : ''}
+  </div>
 
   ${adSlot('dash')}
 
