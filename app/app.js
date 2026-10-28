@@ -748,10 +748,36 @@ function chartY(W, H, yOf, lo, hi){
   const labels = `<div class="sp-y" aria-hidden="true">${ticks.map(v => `<span style="top:${(yOf(v) / H * 100).toFixed(2)}%">${chartTick(v)}</span>`).join('')}</div>`;
   return { lines, labels };
 }
+// Points du nuage sous la courbe : ronds en pixels, même si le viewBox est étiré (bord à bord).
+function fitHomeDots(){
+  const svg = document.querySelector('.home-spark svg');
+  const plot = svg && svg.parentElement;
+  const pat = svg && svg.querySelector('#spkdot');
+  const dot = pat && pat.querySelector('ellipse');
+  if (!svg || !plot || !pat || !dot) return;
+  const vb = svg.viewBox.baseVal;
+  const w = plot.clientWidth, h = plot.clientHeight;
+  if (!w || !h || !vb.width || !vb.height) return;
+  const sx = w / vb.width, sy = h / vb.height;
+  const gap = 8, r = 1.05;
+  pat.setAttribute('width', (gap / sx).toFixed(3));
+  pat.setAttribute('height', (gap / sy).toFixed(3));
+  dot.setAttribute('cx', (1.15 / sx).toFixed(3));
+  dot.setAttribute('cy', (1.15 / sy).toFixed(3));
+  dot.setAttribute('rx', (r / sx).toFixed(3));
+  dot.setAttribute('ry', (r / sy).toFixed(3));
+}
+let _fitDotsRaf = 0;
+function scheduleHomeDots(){
+  if (_fitDotsRaf) cancelAnimationFrame(_fitDotsRaf);
+  _fitDotsRaf = requestAnimationFrame(() => { _fitDotsRaf = 0; fitHomeDots(); });
+}
+addEventListener('resize', () => { if (document.querySelector('.home-spark')) scheduleHomeDots(); });
 function spark(curve){
   if (!curve || curve.length < 2) return '';
   const tf = homeTfMeta();
-  const W = 340, H = 118, PADL = 2, PADR = 46, PADT = 16, PADB = 10;
+  // viewBox calé sur un iPhone 393×852 : la courbe CSS fait ~40 % de la hauteur, bord à bord.
+  const W = 390, H = 340, PADL = 0, PADR = 0, PADT = 28, PADB = 16;
   const vs = curve.map(p => p.v), lo = Math.min(...vs), hi = Math.max(...vs), r = hi - lo || 1;
   const x = i => PADL + (i / (curve.length - 1)) * (W - PADL - PADR);
   const y = v => PADT + (hi - v) / r * (H - PADT - PADB);
@@ -760,24 +786,22 @@ function spark(curve){
   const last = pts[pts.length - 1], first = pts[0];
   const track = curve.map((p, i) => ({ x: pts[i][0] / W * 100, y: pts[i][1] / H * 100, v: p.v, t: p.t }));
   const line = d, area = `${d} L${last[0].toFixed(1)},${H} L${first[0].toFixed(1)},${H} Z`;
-  const grid = chartY(W, H, y, lo, hi);
   const fmt = homeTf === '24H' ? 'hour' : (homeTf === '3M' || homeTf === '1A' || homeTf === 'TOUT') ? 'month' : 'day';
   SPARK = { pts: track, poly: pts, H, line, area, first: curve[0].v, tf: homeTf, fmt, home: true };
-  const nLab = homeTf === '24H' || homeTf === '7J' ? 4 : 5;
-  const seen = new Set(), idxs = [];
-  for (let k = 0; k < nLab; k++){ const i = Math.round(k * (curve.length - 1) / (nLab - 1)); if (!seen.has(i)) { seen.add(i); idxs.push(i); } }
-  const lab = d => homeTf === '24H' ? String(d.getHours()).padStart(2, '0') + ' h' : (homeTf === '3M' || homeTf === '1A' || homeTf === 'TOUT') ? MOIS[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) : d.getDate() + ' ' + MOIS[d.getMonth()];
-  const axis = idxs.map((i, k) => `<span class="${k === 0 ? 'a0' : k === idxs.length - 1 ? 'a1' : ''}" style="left:${track[i].x.toFixed(2)}%">${lab(curve[i].t)}</span>`).join('');
   return `<div class="spark home-spark" role="img" aria-label="Évolution du solde sur ${tf[2]}. Glissez pour voir le détail."><div class="spark-plot"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-    <defs><linearGradient id="spk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0066FF" stop-opacity=".25"/><stop offset="1" stop-color="#0066FF" stop-opacity="0"/></linearGradient></defs>
-    ${grid.lines}
+    <defs>
+      <linearGradient id="spk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0066FF" stop-opacity=".20"/><stop offset=".62" stop-color="#0066FF" stop-opacity=".06"/><stop offset="1" stop-color="#0066FF" stop-opacity="0"/></linearGradient>
+      <pattern id="spkdot" width="8" height="8" patternUnits="userSpaceOnUse"><ellipse cx="1.15" cy="1.15" rx="1.05" ry="1.05" fill="#0066FF"/></pattern>
+      <linearGradient id="spkfade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".5"/><stop offset=".72" stop-color="#ffffff" stop-opacity=".16"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+      <mask id="spkmask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect x="0" y="0" width="${W}" height="${H}" fill="url(#spkfade)"/></mask>
+    </defs>
     <path class="sp-area" d="${area}" fill="url(#spk)"/>
-    <path class="sp-dim" d="" fill="none" stroke="var(--accent)" stroke-width="1.35" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
-    <path class="sp-line" d="${line}" fill="none" stroke="var(--accent)" stroke-width="1.35" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
-  </svg>${grid.labels}<i class="sp-vline" hidden></i><i class="sp-dot" style="left:${(last[0] / W * 100).toFixed(2)}%;top:${(last[1] / H * 100).toFixed(2)}%"></i>
+    <path class="sp-area sp-dots" d="${area}" fill="url(#spkdot)" mask="url(#spkmask)"/>
+    <path class="sp-dim" d="" fill="none" stroke="#0066FF" stroke-width="2.25" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+    <path class="sp-line" d="${line}" fill="none" stroke="#0066FF" stroke-width="2.25" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg><i class="sp-vline" hidden></i><i class="sp-dot" style="left:${(last[0] / W * 100).toFixed(2)}%;top:${(last[1] / H * 100).toFixed(2)}%"></i>
   <div class="sp-tip" hidden><b></b><span></span></div>
-  <div class="sp-hit" aria-hidden="true"></div></div>
-  <div class="sp-axis">${axis}</div></div>`;
+  <div class="sp-hit" aria-hidden="true"></div></div></div>`;
 }
 function bankCurve(b, tx){
   const days = 30, t0 = day0(nowRef());
@@ -1369,15 +1393,17 @@ screens.dashboard = () => {
     <div class="g-tags"><span class="plan-pill ${P ? 'p' : ''}">${P ? 'Premium' : 'Gratuit'}</span>${demoTag}</div></div><h1>Bonjour${esc(prenom)}</h1></div>
 
   <section class="total rise" style="--d:1">
-    <button type="button" class="sync-btn" id="home-sync" aria-label="Synchroniser vos comptes">⟦refresh⟧<span>Synchroniser</span></button>
-    <div class="lbl">Solde total · ${L.nAcc} compte${L.nAcc > 1 ? 's' : ''}${banksN > 1 ? ' dans ' + banksN + ' banques' : ''}</div>
+    <div class="bal-top">
+      <div class="lbl">Solde total · ${L.nAcc} compte${L.nAcc > 1 ? 's' : ''}${banksN > 1 ? ' dans ' + banksN + ' banques' : ''}</div>
+      <button type="button" class="sync-btn" id="home-sync" aria-label="Synchroniser vos comptes">⟦refresh⟧<span>Synchroniser</span></button>
+    </div>
     <div class="amount-row">
       <div class="amount" data-count="${L.total.toFixed(2)}" ${state.hideBalance ? 'data-hidden="1"' : ''}>${state.hideBalance ? '<span class="masked">••••</span>' : money(L.total)}</div>
       <button type="button" class="eye" id="toggle-balance" role="switch" aria-checked="${state.hideBalance ? 'true' : 'false'}" aria-label="${state.hideBalance ? 'Afficher le solde' : 'Masquer le solde'}">⟦${state.hideBalance ? 'eyeoff' : 'eye'}⟧</button>
     </div>
     <div class="delta" id="sp-delta">${state.hideBalance ? 'Solde masqué' : `${delta >= 0 ? '⟦trend⟧' : ''}<b class="${delta >= 0 ? 'pos' : ''}">${signed(delta)}</b>${Math.abs(pp) >= 0.5 ? ` <i class="delta-pct ${delta >= 0 ? 'up' : 'down'}">${ppTxt}</i>` : ''} ${homeTf === 'TOUT' ? 'depuis le début' : 'sur ' + tf[2]}`}</div>
-    <div class="tf" role="tablist" aria-label="Période du graphique" style="--tf-i:${Math.max(0, HOME_TF.findIndex(([k]) => k === homeTf))}"><i class="tf-pill" aria-hidden="true"></i>${HOME_TF.map(([k, lab]) => `<button type="button" role="tab" data-tf="${k}" aria-selected="${k === homeTf ? 'true' : 'false'}" class="${k === homeTf ? 'on' : ''}">${lab}</button>`).join('')}</div>
     ${spark(curve)}
+    <div class="tf" role="tablist" aria-label="Période du graphique" style="--tf-i:${Math.max(0, HOME_TF.findIndex(([k]) => k === homeTf))}"><i class="tf-pill" aria-hidden="true"></i>${HOME_TF.map(([k, lab]) => `<button type="button" role="tab" data-tf="${k}" aria-selected="${k === homeTf ? 'true' : 'false'}" class="${k === homeTf ? 'on' : ''}">${lab}</button>`).join('')}</div>
     ${P ? `<a class="rav" href="#/abonnements"><span>Reste à vivre jusqu’à la paie</span><b>${state.hideBalance ? '<span class="masked">••••</span>' : eur(t.reste)}</b></a>`
         : `<a class="rav locked" href="#/premium"><span>⟦lock⟧ Reste à vivre jusqu’à la paie</span><b>Premium</b></a>`}
   </section>
@@ -3616,7 +3642,7 @@ function render(){
   if (name === 'soutiens') loadSupporters();
   if (name==='dashboard' || name==='defis') gamMarkOpen();
   if (name==='niveaux') nvMount();
-  if (name==='dashboard') animateHome();
+  if (name==='dashboard') { animateHome(); scheduleHomeDots(); }
   if (name==='scan') runScan();
   if (name==='pwscan' && PWX && !LIVE) runPwScan();
   if (name==='connexion' && API){ const tk = new URLSearchParams(qs||'').get('token'); if (tk) apiVerify(tk); }
@@ -4039,9 +4065,9 @@ else if (QS.get('billing') === 'cancel'){ toast('Paiement annulé : rien n’a �
     const S = el._data;
     if (S && S.idx && window.__pidxScrub) window.__pidxScrub(null);
     if (S) {
-      const line = el.querySelector('.sp-line'), dim = el.querySelector('.sp-dim'), area = el.querySelector('.sp-area');
+      const line = el.querySelector('.sp-line'), dim = el.querySelector('.sp-dim');
       if (line) line.setAttribute('d', S.line);
-      if (area) area.setAttribute('d', S.area);
+      setAreas(el, S.area);
       if (dim) dim.setAttribute('d', '');
     }
     delete el._orig;
@@ -4061,6 +4087,7 @@ else if (QS.get('billing') === 'cancel'){ toast('Paiement annulé : rien n’a �
     }
   };
   const segPath = arr => arr.map((p, n) => (n ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const setAreas = (el, d) => { el.querySelectorAll('.sp-area').forEach(n => n.setAttribute('d', d)); };
   const tipWhen = (t, fmt, partial) => {
     const s = fmt === 'hour' ? t.getDate() + ' ' + MOIS[t.getMonth()] + ' · ' + String(t.getHours()).padStart(2, '0') + ' h' : fmt === 'month' ? MOIS[t.getMonth()] + ' ' + t.getFullYear() : t.getDate() + ' ' + MOIS[t.getMonth()] + ' ' + t.getFullYear();
     return partial ? s + ' · estimation' : s;
@@ -4084,11 +4111,11 @@ else if (QS.get('billing') === 'cancel'){ toast('Paiement annulé : rien n’a �
     if (vl) { vl.hidden = false; vl.style.left = p.x + '%'; }
     if (dot) { dot.hidden = false; dot.style.left = p.x + '%'; dot.style.top = p.y + '%'; dot.classList.toggle('is-partial', !!p.partial); }
     const left = poly.slice(0, i + 1), right = poly.slice(i);
-    const line = el.querySelector('.sp-line'), dim = el.querySelector('.sp-dim'), area = el.querySelector('.sp-area');
+    const line = el.querySelector('.sp-line'), dim = el.querySelector('.sp-dim');
     if (line) line.setAttribute('d', segPath(left));
     if (dim) dim.setAttribute('d', segPath(right));
     const sx = poly[i][0], sy = poly[i][1];
-    if (area) area.setAttribute('d', segPath(left) + ` L${sx.toFixed(1)},${S.H} L${poly[0][0].toFixed(1)},${S.H} Z`);
+    setAreas(el, segPath(left) + ` L${sx.toFixed(1)},${S.H} L${poly[0][0].toFixed(1)},${S.H} Z`);
     const read = el.querySelector('.sp-read');
     const when = deskWhen(S.fmt, p.t, p.partial);
     const num = S.idx ? String(Math.round(p.v)) : S.signed ? sgnEUR(p.v) : (S.fmt === 'month' ? kEUR(p.v) : p.v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €');
@@ -4148,10 +4175,10 @@ else if (QS.get('billing') === 'cancel'){ toast('Paiement annulé : rien n’a �
     const seg = arr => arr.map((p, n) => (n ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
     const left = poly.slice(0, ai + 1).concat([[sx, sy]]);
     const right = [[sx, sy]].concat(poly.slice(bi));
-    const line = st.el.querySelector('.sp-line'), dim = st.el.querySelector('.sp-dim'), area = st.el.querySelector('.sp-area');
+    const line = st.el.querySelector('.sp-line'), dim = st.el.querySelector('.sp-dim');
     if (line) line.setAttribute('d', seg(left));
     if (dim) dim.setAttribute('d', seg(right));
-    if (area) area.setAttribute('d', seg(left) + ` L${sx.toFixed(1)},${S.H} L${poly[0][0].toFixed(1)},${S.H} Z`);
+    setAreas(st.el, seg(left) + ` L${sx.toFixed(1)},${S.H} L${poly[0][0].toFixed(1)},${S.H} Z`);
     if (st.home) {
       if (amt && !state.hideBalance) { amt.dataset.scrub = '1'; amt.innerHTML = money(v); }
       if (dl && !state.hideBalance) {
