@@ -3678,6 +3678,34 @@ document.addEventListener('click', e => {
   toast('Vote enregistré'); render();
 });
 
+function fitHomeFold(){
+  const fold = document.querySelector('.screen.home .home-fold');
+  if (!fold) return;
+  const screen = fold.closest('.screen');
+  const note = screen && screen.querySelector('.alpha-note');
+  const bar = screen && screen.querySelector('.topbar');
+  const tab = document.getElementById('tabbar');
+  const extra = el => {
+    if (!el) return 0;
+    const s = getComputedStyle(el);
+    return el.offsetHeight + (parseFloat(s.marginTop) || 0) + (parseFloat(s.marginBottom) || 0);
+  };
+  fold.style.setProperty('--home-topbar', (bar ? extra(bar) : 62) + 'px');
+  fold.style.setProperty('--home-note', (note ? extra(note) : 0) + 'px');
+  const top = fold.getBoundingClientRect().top;
+  let limit = window.innerHeight;
+  if (tab && !tab.hidden) {
+    const r = tab.getBoundingClientRect();
+    if (r.height > 0 && r.top > top) limit = r.top;
+  }
+  const next = Math.round(limit - top);
+  if (next > 0) fold.style.minHeight = next + 'px';
+  if (!fitHomeFold.bound) {
+    fitHomeFold.bound = true;
+    window.addEventListener('resize', () => { if (document.querySelector('.screen.home .home-fold')) fitHomeFold(); });
+  }
+}
+
 function render(){
   closeCatSheet();
   leaveView();
@@ -3704,7 +3732,7 @@ function render(){
   if (name === 'soutiens') loadSupporters();
   if (name==='dashboard' || name==='defis') gamMarkOpen();
   if (name==='niveaux') nvMount();
-  if (name==='dashboard') { animateHome(); scheduleHomeDots(); }
+  if (name==='dashboard') { fitHomeFold(); animateHome(); scheduleHomeDots(); }
   if (name==='scan') runScan();
   if (name==='pwscan' && PWX && !LIVE) runPwScan();
   if (name==='connexion' && API){ const tk = new URLSearchParams(qs||'').get('token'); if (tk) apiVerify(tk); }
