@@ -35,7 +35,7 @@
   <link rel="icon" href="assets/favicon-32.png?v=85" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png?v=85">
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="landing.css?v=13">
+  <link rel="stylesheet" href="landing.css?v=14">
 </head>
 <body>
 <header class="nav wrap">
@@ -92,7 +92,7 @@
       <input id="beta-email" type="email" name="email" placeholder="vous@email.fr" autocomplete="email" inputmode="email" maxlength="254" required>
       <label for="beta-ref">Code de parrainage <span>facultatif</span></label>
       <input id="beta-ref" type="text" name="ref" placeholder="Si un ami vous a invité" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="8" inputmode="text">
-      <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input class="hp" type="text" name="prelevo_hp_zxq" tabindex="-1" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-hidden="true" data-1p-ignore="true" data-lpignore="true" value="">
       <button type="submit">Demander ma place</button>
       <p class="beta-rgpd">Votre adresse e-mail sert uniquement à la bêta. Vous pouvez vous désinscrire à tout moment en écrivant à <a data-contact-link href="mailto:jhn.dlt@mail.grokbot.com"><span data-contact>jhn.dlt@mail.grokbot.com</span></a>.</p>
       <p class="beta-msg" role="status" aria-live="polite"></p>
@@ -111,7 +111,7 @@
         <button type="button" data-copy>Copier</button>
         <button type="button" data-share>Partager</button>
       </div>
-      <p class="beta-move">Chaque ami qui s’inscrit avec votre lien vous fait passer devant les personnes qui en ont invité moins.</p>
+      <p class="beta-move">Chaque ami dont l’e-mail est confirmé vous fait passer devant les personnes qui en ont moins, dans la limite de 10 parrainages comptés.</p>
       <p class="beta-msg" data-done-msg role="status" aria-live="polite"></p>
       <button type="button" class="beta-refresh" data-refresh>Actualiser ma place</button>
     </div>
@@ -253,6 +253,6 @@
   <p class="copy">© 2026 Prelevo</p>
 </footer>
 <script src="config.js?v=2"></script>
-<script src="landing.js?v=2" defer></script>
+<script src="landing.js?v=3" defer></script>
 </body>
 </html>

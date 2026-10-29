@@ -31,7 +31,7 @@ Répertoire de l’app Node : `server/`. Commande : `npm start` (`node src/index
 
 Appliquer `supabase/migrations/20261021170000_enablebanking.sql` dans l’éditeur SQL Supabase. RLS est activé. `anon` et `authenticated` n’ont aucun droit. Seul `service_role` a `SELECT`, `INSERT`, `UPDATE`, `DELETE`.
 
-La bêta fermée a sa propre migration, `supabase/migrations/20261028200000_waitlist.sql`, à coller dans le même éditeur. Elle n’est pas appliquée par ce dépôt. La table `waitlist` est fermée de la même façon. Seule la fonction `join_waitlist` est exécutable avec la clé anon.
+La bêta fermée a sa propre migration, `supabase/migrations/20261028200000_waitlist.sql`, à coller dans le même éditeur. Elle n’est pas appliquée par ce dépôt. La table `waitlist` est fermée de la même façon. Seule la fonction `join_waitlist` est exécutable avec la clé anon. Elle ne reçoit pas de compteur : un filleul compte seulement après `confirm_waitlist`, réservée à la clé service, dans la limite de 10, et jamais en auto-parrainage.
 
 Le jeton Bearer du navigateur n’est pas stocké : `app_sessions.token_hash` est le SHA-256 hexadécimal du jeton, avec `user_id`. Le lien magique déjà en production doit écrire cette ligne (ce module ne l’émet pas). `GET /me` ici ne renvoie que la banque ; si le serveur existant a déjà un `GET /me` (compte, facturation), fusionnez `bank.me()` dedans. `DELETE /me` ici ne retire que l’accès bancaire.
 

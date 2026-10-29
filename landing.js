@@ -126,7 +126,7 @@
 
     const readBeta = () => { try { return JSON.parse(localStorage.getItem(BETA_KEY) || 'null'); } catch (e) { return null; } };
     const writeBeta = (row) => { try { localStorage.setItem(BETA_KEY, JSON.stringify(row)); } catch (e) {} };
-    const referralLink = (code) => location.origin + location.pathname + '?ref=' + encodeURIComponent(code);
+    const referralLink = (code) => location.origin + location.pathname + '?ref=' + encodeURIComponent(code) + '#beta';
 
     function showDone(row, fresh) {
       card.classList.add('is-done');
@@ -147,6 +147,37 @@
 
     const saved = readBeta();
     if (saved && saved.referral_code && saved.position != null) showDone(saved, false);
+
+    // ?ref= doit ouvrir le formulaire de la bêta, code déjà rempli.
+    // Le lien partagé porte #beta ; on défile aussi si le hash a été perdu.
+    if (refFromUrl) {
+      if (location.hash !== '#beta') {
+        try { history.replaceState(null, '', location.pathname + location.search + '#beta'); } catch (e) {}
+      }
+      const openBeta = () => {
+        const target = card.classList.contains('is-done') ? beta : form;
+        const top = target.getBoundingClientRect().top + window.scrollY - 84;
+        window.scrollTo(0, Math.max(0, top));
+        if (!card.classList.contains('is-done') && form.email) form.email.focus({ preventScroll: true });
+      };
+      openBeta();
+      window.addEventListener('load', () => { openBeta(); setTimeout(openBeta, 50); setTimeout(openBeta, 350); }, { once: true });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(openBeta);
+
+      // Le hero et le bas de page envoient ailleurs : ils n’écrivent pas referred_by.
+      document.querySelectorAll('form.wl').forEach(f => f.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        const typed = (f.email && f.email.value || '').trim();
+        if (typed && form.email) form.email.value = typed;
+        const note = f.querySelector('.wl-msg');
+        if (note) {
+          note.className = 'wl-msg';
+          note.textContent = 'Pour que le parrainage compte, demandez votre place dans la bêta fermée, juste ici.';
+        }
+        openBeta();
+      }, true));
+    }
 
     // Même appel que server/src/store.js : REST Supabase, clé anon, jamais la clé service.
     async function joinRpc(email, referredBy) {
@@ -178,7 +209,13 @@
 
     async function submitBeta(email, refRaw) {
       msg.className = 'beta-msg';
-      if (form.company.value) return;
+      const trap = form.elements.namedItem('prelevo_hp_zxq');
+      if (trap && String(trap.value || '').trim()) {
+        trap.value = '';
+        msg.textContent = 'Un remplissage automatique a bloqué l’envoi. Votre place n’a pas été demandée : réessayez.';
+        msg.classList.add('err');
+        return;
+      }
       if (!valid(email) || email.length > 254) {
         msg.textContent = 'Indiquez une adresse e-mail valide.';
         msg.classList.add('err');

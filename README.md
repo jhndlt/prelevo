@@ -8,7 +8,7 @@ En ligne (après publication) : https://jhndlt.github.io/prelevo/
 - `incentive` : texte de l'offre de lancement (« Les 500 premiers inscrits : 3 mois de Premium offerts »), `enabled:false` pour la masquer.
 - `waitlist` : où partent les inscriptions de la liste d’attente (`provider` : none | google-form | formspree | apps-script | json, `endpoint`, `field`).
   Avec `none`, rien n'est envoyé : l'e-mail reste dans le navigateur du visiteur (aperçu uniquement, à ne pas publier tel quel).
-- `supabase` : bêta fermée (`#beta`). `url` du projet et clé **anon** publique. Jamais la clé service. L’appel est un `POST /rest/v1/rpc/join_waitlist`, comme le `fetch` de `server/src/store.js`. Tant que `url` ou `anonKey` est vide, le formulaire ne part pas.
+- `supabase` : bêta fermée (`#beta`). `url` du projet et clé **anon** publique. Jamais la clé service. L’appel est un `POST /rest/v1/rpc/join_waitlist`, comme le `fetch` de `server/src/store.js`. Tant que `url` ou `anonKey` est vide, le formulaire ne part pas. Un filleul ne compte qu’une fois l’e-mail confirmé par `confirm_waitlist` (clé service uniquement), dans la limite de 10.
 - Migration à coller à la main dans l’éditeur SQL (ne pas l’appliquer depuis ce dépôt) : `server/supabase/migrations/20261028200000_waitlist.sql`.
 - `publisher`, `contactEmail` : affichés dans Mentions légales et Confidentialité.
 

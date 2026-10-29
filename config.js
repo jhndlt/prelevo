@@ -16,7 +16,8 @@ window.PRELEVO_LANDING = {
   /* Bêta fermée (#beta). Appel REST comme server/src/store.js : fetch, en-têtes apikey
      et Authorization. Clé anon publique uniquement — jamais la clé service.
      url et anonKey vides : le formulaire reste affiché, l’envoi explique qu’il n’est pas ouvert.
-     Migration à coller à la main : server/supabase/migrations/20261028200000_waitlist.sql */
+     Migration à coller à la main : server/supabase/migrations/20261028200000_waitlist.sql
+     Un filleul ne compte qu’après confirm_waitlist, appelable seulement avec la clé service. */
   supabase: { url: '', anonKey: '' },
 
   /* Éditeur et contact affichés dans les mentions / la confidentialité. */

@@ -191,7 +191,7 @@ h1{font-size:clamp(42px,6vw,68px);line-height:1.02;letter-spacing:-.05em;font-we
 .beta-perks{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:18px 0 0;padding:0}
 .beta-perks li{border:1px solid #0A0B0D;border-radius:99px;padding:7px 12px;font-size:13.5px;font-weight:650}
 :root[data-theme="dark"] .beta-perks li{border-color:#fff}
-.beta-form{display:grid;gap:8px;margin-top:22px;text-align:left;max-width:480px;margin-left:auto;margin-right:auto}
+.beta-form{display:grid;gap:8px;margin-top:22px;text-align:left;max-width:480px;margin-left:auto;margin-right:auto;scroll-margin-top:84px}
 .beta-form label{font-size:13px;font-weight:650}
 .beta-form label span{font-weight:500}
 .beta-form input[name=email],.beta-form input[name=ref],.beta-link-row input{width:100%;height:48px;border:1px solid #0A0B0D;border-radius:12px;background:#fff;color:#0A0B0D;font:inherit;font-size:16px;padding:0 14px;outline:0}
@@ -199,7 +199,7 @@ h1{font-size:clamp(42px,6vw,68px);line-height:1.02;letter-spacing:-.05em;font-we
 .beta-form input::placeholder{color:#0A0B0D;opacity:.45}
 :root[data-theme="dark"] .beta-form input::placeholder{color:#fff}
 .beta-form input:focus,.beta-link-row input:focus{border-color:#0066FF;box-shadow:0 0 0 4px rgba(0,102,255,.22)}
-.beta-card .hp{position:absolute;left:-9999px;height:0;width:0;opacity:0;border:0;padding:0}
+.beta-card .hp{position:absolute;left:-9999px;top:auto;height:0;width:0;opacity:0;border:0;padding:0;overflow:hidden;pointer-events:none}
 .beta-form button{border:0;height:48px;border-radius:12px;background:#0066FF;color:#fff;font:inherit;font-weight:650;font-size:15px;cursor:pointer}
 .beta-form button:hover{background:#0066FF}
 .beta-form button[disabled]{opacity:.6;cursor:default}
