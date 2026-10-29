@@ -1312,13 +1312,18 @@ html:not([data-theme="dark"]) .tv-card .sp-read b{color:var(--ink)}
 
 /* Accueil : solde façon Coinbase — montant à gauche, courbe bord à bord, pastilles dessous.
    Noir, blanc, bleu #0066FF. Le premier écran (au-dessus du menu) s’arrête aux défis :
-   la courbe grandit pour remplir l’espace, au moins 170 px. */
+   la courbe grandit pour remplir l’espace, au moins 170 px.
+   La barre fait 62 px (pas 58). Le bandeau .alpha-note, injecté au-dessus en bêta, fait environ 45 px :
+   les deux sont retirés pour que la carte défis reste au-dessus du menu. */
 .screen.home .home-fold{
   --tab-clear:calc(72px + env(safe-area-inset-bottom, 0px));
-  min-height:calc(100vh - 18px - env(safe-area-inset-top, 0px) - 58px - var(--tab-clear));
-  min-height:calc(100dvh - 18px - env(safe-area-inset-top, 0px) - 58px - var(--tab-clear));
+  --home-topbar:62px;
+  --home-note:0px;
+  min-height:calc(100vh - 18px - env(safe-area-inset-top, 0px) - var(--home-topbar) - var(--home-note) - var(--tab-clear));
+  min-height:calc(100dvh - 18px - env(safe-area-inset-top, 0px) - var(--home-topbar) - var(--home-note) - var(--tab-clear));
   display:flex;flex-direction:column;padding-bottom:12px;
 }
+.screen.home:has(.alpha-note) .home-fold{--home-note:45px}
 .screen.home .home-fold .total{
   flex:1 1 auto;display:flex;flex-direction:column;min-height:0;
   background:transparent;border:0;border-radius:0;box-shadow:none;padding:0;margin:0 0 8px;overflow:visible;
