@@ -2665,6 +2665,7 @@ screens.apropos = () => `
     <div class="kv"><span>Version</span><span class="muted">Bêta privée</span></div>
     <div class="kv"><span>Formule</span><span class="muted">${isP() ? 'Premium' : 'Gratuit'}</span></div>
   </div>
+  <a class="btn" style="margin-top:16px" href="${esc(tipeeeHref())}" target="_blank" rel="noopener">Soutenir le projet sur Tipeee</a>
 </div>`;
 screens['notif-push'] = () => {
   const pref = readPushPref();
@@ -2721,23 +2722,21 @@ screens.prelevements = () => {
   ${guideCardHtml()}
 </div>`;
 };
-function ululeHref() {
-  const raw = String((CFG && CFG.ululeUrl) || '').trim();
+function tipeeeHref() {
+  const raw = String((CFG && (CFG.tipeeeUrl || CFG.ululeUrl)) || 'https://fr.tipeee.com/prelevo').trim();
   try {
     const url = new URL(raw);
     if (url.protocol === 'https:' || url.protocol === 'http:') return url.href;
   } catch (e) {}
-  return '';
+  return 'https://fr.tipeee.com/prelevo';
 }
 screens.soutiens = () => {
-  const href = ululeHref();
-  const action = href
-    ? `<a class="btn" href="${esc(href)}" target="_blank" rel="noopener">Voir la campagne Ulule</a>`
-    : '<button class="btn" type="button" disabled>La campagne Ulule n’est pas encore ouverte</button>';
+  const href = tipeeeHref();
+  const action = `<a class="btn" href="${esc(href)}" target="_blank" rel="noopener">Soutenir le projet sur Tipeee</a>`;
   return `
 <div class="screen">
   ${sheetHead('Soutiens', '#/compte')}
-  <p class="push-lead">Merci à celles et ceux qui portent Prelevo. Les noms des contributeurs Ulule apparaîtront ici.</p>
+  <p class="push-lead">Merci à celles et ceux qui portent Prelevo. Les noms des soutiens apparaîtront ici.</p>
   <div id="soutien-list" class="menu-card"><p class="soutien-empty">La liste est vide pour l’instant.</p></div>
   ${action}
 </div>`;

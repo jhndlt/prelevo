@@ -14,6 +14,8 @@ window.APP_CONFIG = {
   // Clé publique VAPID pour l'abonnement Web Push. Vide tant que le serveur ne l'a pas fournie.
   // La clé privée ne figure pas dans ce dépôt. Voir docs/push.md.
   vapidPublicKey: '',
-  // Lien de la campagne Ulule. Vide tant qu’elle n’est pas publiée : le bouton reste désactivé.
+  // Lien de soutien Tipeee (page publique).
+  tipeeeUrl: 'https://fr.tipeee.com/prelevo',
+  // Ancien champ Ulule, conservé pour compatibilité.
   ululeUrl: '',
 };
